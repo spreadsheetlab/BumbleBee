@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>PerfectXL.Dependencies</id>
+    <version>0.8.0</version>
+    <authors>Arie van Deursen</authors>
+    <owners>Infotron</owners>
+    <licenseUrl>file://lib/PerfectXL.Dependencies.License.txt</licenseUrl>
+    <projectUrl>http://www.infotron.nl</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Commercial third party libraries that the PerfectXL.Core depends on.</description>
+    <releaseNotes>First packaging into NuGet.</releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>NuGet PerfectXL</tags>
+  </metadata>
+</package>
