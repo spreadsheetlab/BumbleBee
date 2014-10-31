@@ -39,7 +39,7 @@
     </UpgradeBackupLocation>
     <IsWebBootstrapper>False</IsWebBootstrapper>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <PublishUrl>C:\Users\Efthimia\Documents\GitHub\ExcelAddIns\ExcelAddIns\BumbleBee\BubbleBeeSetup\</PublishUrl>
+    <PublishUrl>publish\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
     <ApplicationVersion>1.0.0.1</ApplicationVersion>
