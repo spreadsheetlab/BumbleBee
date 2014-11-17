@@ -522,6 +522,23 @@ namespace TransformationTests
         }
 
 
+        [TestMethod]
+        public void SUM_COUNT_AVERAGE()
+        {
+            ExcelFormulaParser P = new ExcelFormulaParser();
+            ParseTree Original = P.ParseToTree("SUM(A1:A5)/COUNT(A1:A5)");
+
+            FSharpTransformationRule S = new FSharpTransformationRule();
+            S.from = S.ParseToTree("SUM({r})/COUNT({r})");
+            S.to = S.ParseToTree("AVERAGE(A1:A5)");
+
+            FSharpTransform.Formula Result = S.ApplyOn(Original.Root);
+
+            Assert.AreEqual("AVERAGE(A1:A5)", S.Print(Result));
+        }
+
+
+
 
         [TestMethod]
         public void Merge_Three_Ranges()
@@ -549,6 +566,20 @@ namespace TransformationTests
 
             Assert.AreEqual(false, S1.CanBeAppliedonBool(Original.Root));
         }
+
+        [TestMethod]
+        public void Fancy_Merge()
+        {
+            ExcelFormulaParser P = new ExcelFormulaParser();
+            ParseTree Original = P.ParseToTree("(SUM(K3:K4,K5,K6,K7))/COUNT(K3:K7)");
+
+            FSharpTransformationRule S1 = new FSharpTransformationRule();
+            S1.from = S1.ParseToTree("SUM({x,y}: {i,j}, {i,j+1},[k])");
+            S1.to = S1.ParseToTree("SUM({x,y}:{i,j+1},[k])");
+
+            Assert.AreEqual(true, S1.CanBeAppliedonBool(Original.Root));
+        }
+
 
 
         [TestMethod]
