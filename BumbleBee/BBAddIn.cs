@@ -199,7 +199,6 @@ namespace ExcelAddIn3
                     }
                 }
             }
-           
 
         }
 
@@ -260,7 +259,11 @@ namespace ExcelAddIn3
             {
                 Log("ApplyinRange tried with empty dropdown");
             }
-                                                                   
+
+
+            //after applying, we want to empty the preview box, find new rewrites and show them (in dropdown and preview)
+            FindApplicableTransformations();
+            MakePreview();                                
         }
 
         public void ColorSmells()
