@@ -36,6 +36,28 @@ namespace ExcelAddIn3
         }
     }
 
+    public class SmellyCell
+    {
+        public Range Cell;
+        public Object OriginalPattern;
+        public Object OriginalColor;
+
+        public SmellyCell(Range cell,
+            Object originalPattern,
+            Object originalColor)
+        {
+            this.Cell = cell;
+            this.OriginalPattern = originalPattern;
+            this.OriginalColor = originalColor;
+        }
+
+        public void Reset(){
+            Cell.Interior.Color = OriginalColor;
+            Cell.Interior.Pattern = OriginalPattern;
+            Cell.Comment.Visible = false;
+        }
+    }
+
     public partial class BBAddIn
     {
 
@@ -43,7 +65,7 @@ namespace ExcelAddIn3
         public Ribbon1 theRibbon;
         List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
         public AnalysisController AnalysisController;
-        private List<Range> coloredCells = new List<Range>();
+        private List<SmellyCell> coloredCells = new List<SmellyCell>();
 
 
         private static string RemoveFirstSymbol(string input)
@@ -329,11 +351,9 @@ namespace ExcelAddIn3
 
         private void decolorCells()
         {
-            foreach (var cell in coloredCells)
+            foreach (SmellyCell smellyCell in coloredCells)
             {
-                cell.Interior.Color =
-                    System.Drawing.ColorTranslator.ToOle(Color.White);
-                cell.Comment.Visible = false;
+                smellyCell.Reset();
             }
             coloredCells.Clear();
         }
@@ -347,7 +367,7 @@ namespace ExcelAddIn3
                 var cell = (smell.SourceType == RiskSourceType.SiblingClass) ? ((SiblingClass)smell.Source).Cells[0] : (Cell)smell.Source;
 
                 var excelCell = Application.Sheets[cell.Worksheet.Name].Cells[cell.Location.Row + 1, cell.Location.Column + 1];
-                coloredCells.Add(excelCell);
+                coloredCells.Add(new SmellyCell(excelCell, excelCell.Interior.Pattern, excelCell.Interior.Color));
 
                 excelCell.Interior.Pattern = XlPattern.xlPatternSolid;
                 excelCell.Interior.Color =
