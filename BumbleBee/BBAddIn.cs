@@ -56,6 +56,24 @@ namespace ExcelAddIn3
             Cell.Interior.Pattern = OriginalPattern;
             Cell.Comment.Visible = false;
         }
+
+        public void Apply(Smell smell)
+        {
+            Cell.Interior.Pattern = XlPattern.xlPatternSolid;
+            Cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(Color.Red);
+
+            if (Cell.Comment == null || Cell.Comment.ToString() == "")
+            {
+                var analyzerExtension = new tmpAnalyzerExtension(smell.AnalysisType);
+                var comments = analyzerExtension.GetSmellMessage(smell);
+                if (!string.IsNullOrEmpty(comments))
+                {
+                    Cell.AddComment(comments);
+                }
+            }
+
+            Cell.Comment.Visible = true;
+        }
     }
 
     public partial class BBAddIn
@@ -367,23 +385,10 @@ namespace ExcelAddIn3
                 var cell = (smell.SourceType == RiskSourceType.SiblingClass) ? ((SiblingClass)smell.Source).Cells[0] : (Cell)smell.Source;
 
                 var excelCell = Application.Sheets[cell.Worksheet.Name].Cells[cell.Location.Row + 1, cell.Location.Column + 1];
-                coloredCells.Add(new SmellyCell(excelCell, excelCell.Interior.Pattern, excelCell.Interior.Color));
 
-                excelCell.Interior.Pattern = XlPattern.xlPatternSolid;
-                excelCell.Interior.Color =
-                    System.Drawing.ColorTranslator.ToOle(Color.Red);
-
-                if (string.IsNullOrEmpty(excelCell.Comment))
-                {
-                    var analyzerExtension = new tmpAnalyzerExtension(smell.AnalysisType);
-                    var comments = analyzerExtension.GetSmellMessage(smell);
-                    if (!string.IsNullOrEmpty(comments))
-                    {
-                        excelCell.AddComment(comments);
-                    }
-                }
-
-                excelCell.Comment.Visible = true;
+                var smellyCell = new SmellyCell(excelCell, excelCell.Interior.Pattern, excelCell.Interior.Color);
+                smellyCell.Apply(smell);
+                coloredCells.Add(smellyCell);
             }
             catch (Exception e)
             {
