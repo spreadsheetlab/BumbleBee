@@ -41,20 +41,24 @@ namespace ExcelAddIn3
         public Range Cell;
         public Object OriginalPattern;
         public Object OriginalColor;
+        public Object OriginalComment;
 
         public SmellyCell(Range cell,
             Object originalPattern,
-            Object originalColor)
+            Object originalColor,
+            Object originalComment)
         {
             this.Cell = cell;
             this.OriginalPattern = originalPattern;
             this.OriginalColor = originalColor;
+            this.OriginalComment = (originalComment != null) ? ((Comment)originalComment).Text() : null;
         }
 
         public void Reset(){
             Cell.Interior.Color = OriginalColor;
             Cell.Interior.Pattern = OriginalPattern;
-            Cell.Comment.Visible = false;
+            Cell.Comment.Delete();
+            if (OriginalComment != null) Cell.AddComment(OriginalComment.ToString());
         }
 
         public void Apply(Smell smell)
@@ -62,17 +66,19 @@ namespace ExcelAddIn3
             Cell.Interior.Pattern = XlPattern.xlPatternSolid;
             Cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(Color.Red);
 
-            if (Cell.Comment == null || Cell.Comment.ToString() == "")
+            var existingComment = "";
+            var analyzerExtension = new tmpAnalyzerExtension(smell.AnalysisType);
+            var comments = analyzerExtension.GetSmellMessage(smell);
+            if (!string.IsNullOrEmpty(comments))
             {
-                var analyzerExtension = new tmpAnalyzerExtension(smell.AnalysisType);
-                var comments = analyzerExtension.GetSmellMessage(smell);
-                if (!string.IsNullOrEmpty(comments))
+                if (Cell.Comment != null)
                 {
-                    Cell.AddComment(comments);
+                    existingComment = Cell.Comment.Text() + "\n";
+                    Cell.Comment.Delete();
                 }
+                Cell.AddComment(existingComment + comments);
+                Cell.Comment.Visible = true;
             }
-
-            Cell.Comment.Visible = true;
         }
 
         public override bool Equals(System.Object obj)
@@ -402,7 +408,7 @@ namespace ExcelAddIn3
 
                 var excelCell = Application.Sheets[cell.Worksheet.Name].Cells[cell.Location.Row + 1, cell.Location.Column + 1];
 
-                var smellyCell = new SmellyCell(excelCell, excelCell.Interior.Pattern, excelCell.Interior.Color);
+                var smellyCell = new SmellyCell(excelCell, excelCell.Interior.Pattern, excelCell.Interior.Color, excelCell.Comment);
                 smellyCell.Apply(smell);
                 if (!coloredCells.Any(x => x.Equals(smellyCell)))
                 {
