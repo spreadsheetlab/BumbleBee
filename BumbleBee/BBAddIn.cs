@@ -74,6 +74,22 @@ namespace ExcelAddIn3
 
             Cell.Comment.Visible = true;
         }
+
+        public override bool Equals(System.Object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            var smellyCell = obj as SmellyCell;
+            if (smellyCell == null)
+            {
+                return false;
+            }
+
+            return (Cell.Address == smellyCell.Cell.Address);
+        }
     }
 
     public partial class BBAddIn
@@ -83,7 +99,7 @@ namespace ExcelAddIn3
         public Ribbon1 theRibbon;
         List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
         public AnalysisController AnalysisController;
-        private List<SmellyCell> coloredCells = new List<SmellyCell>();
+        private ISet<SmellyCell> coloredCells = new HashSet<SmellyCell>();
 
 
         private static string RemoveFirstSymbol(string input)
@@ -388,7 +404,10 @@ namespace ExcelAddIn3
 
                 var smellyCell = new SmellyCell(excelCell, excelCell.Interior.Pattern, excelCell.Interior.Color);
                 smellyCell.Apply(smell);
-                coloredCells.Add(smellyCell);
+                if (!coloredCells.Any(x => x.Equals(smellyCell)))
+                {
+                    coloredCells.Add(smellyCell);
+                }
             }
             catch (Exception e)
             {
