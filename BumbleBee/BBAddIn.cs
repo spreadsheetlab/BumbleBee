@@ -421,7 +421,8 @@ namespace ExcelAddIn3
             foreach (var smellType in AnalysisController.DetectedSmells.Select(x => x.AnalysisType).Distinct())
             {
                 tmpAnalyzerExtension analyzerExtension = new tmpAnalyzerExtension(smellType);
-                addSelectSmellTypeItem(smellType.ToString(), analyzerExtension.SmellName);
+                if (AnalysisController.DetectedSmells.Any(x => analyzerExtension.GetMetricScore(x.RiskValue) > MetricScore.None))
+                    addSelectSmellTypeItem(smellType.ToString(), analyzerExtension.SmellName);
             }
 
             addSelectSmellTypeItem("", "(all)", true);
