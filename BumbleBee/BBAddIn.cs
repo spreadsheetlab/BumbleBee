@@ -247,26 +247,16 @@ namespace ExcelAddIn3
                 {
                     for (int j = 1; j <= RightMost; j++)
                     {
-                        Excel.Range Cell = R.Cells.Item[i, j];
-                        string Formula = Cell.Formula;
-                        if (Cell.HasFormula)
-                        {
-                            Formula = RemoveFirstSymbol(Formula);
-                            if (T.CanBeAppliedonBool(Formula))
-                            {
-                                Cell.Formula = "=" + T.ApplyOn(Formula);
-                                Cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
-                            }
-                        }
+                        applyInCell(T, R.Cells.Item[i, j]);
                     }
                 }
             }
-
         }
 
         public void ApplyinSheet()
         {
             Log("ApplyinSheet, " + theRibbon.dropDown1.SelectedItem.Label);
+
             //get the transformation
             FSharpTransformationRule T = AllTransformations.FirstOrDefault(x => x.Name == theRibbon.dropDown1.SelectedItem.Label);
 
@@ -281,23 +271,10 @@ namespace ExcelAddIn3
             {
                 for (int j = 1; j <= RightMost; j++)
                 {
-                    Excel.Range Cell = R.Cells.Item[i, j];
-                    string Formula = Cell.Formula;
-                    if (Cell.HasFormula)
-                    {
-                        Formula = RemoveFirstSymbol(Formula);
-                        if (T.CanBeAppliedonBool(Formula))
-                        {
-                            Cell.Formula = "=" + T.ApplyOn(Formula);
-                            Cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
-                        }
-                    }
+                    applyInCell(T, R.Cells.Item[i, j]);
                 }    
             }
-
          }
-
-
 
         public void ApplyinRange()
         {
@@ -313,8 +290,7 @@ namespace ExcelAddIn3
 
                 foreach (Excel.Range Cell in R.Cells)
                 {
-                    string Formula = RemoveFirstSymbol(Cell.Formula);
-                    Cell.Formula = "=" + T.ApplyOn(Formula);
+                    applyInCell(T, Cell);
                 }
             }
             else
@@ -326,6 +302,20 @@ namespace ExcelAddIn3
             //after applying, we want to empty the preview box, find new rewrites and show them (in dropdown and preview)
             FindApplicableTransformations();
             MakePreview();                                
+        }
+
+        private void applyInCell(FSharpTransformationRule T, Excel.Range Cell)
+        {
+            string Formula = Cell.Formula;
+            if (Cell.HasFormula)
+            {
+                Formula = RemoveFirstSymbol(Formula);
+                if (T.CanBeAppliedonBool(Formula))
+                {
+                    Cell.Formula = "=" + T.ApplyOn(Formula);
+                    Cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
+                }
+            }
         }
 
         public void ColorSmells()
