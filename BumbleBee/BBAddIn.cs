@@ -36,6 +36,13 @@ namespace ExcelAddIn3
         }
     }
 
+    public enum ApplyTo
+    {
+        Range,
+        Worksheet,
+        Workbook
+    }
+
     public class SmellyCell
     {
         public Range Cell;
@@ -106,7 +113,6 @@ namespace ExcelAddIn3
         List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
         public AnalysisController AnalysisController;
         private ISet<SmellyCell> coloredCells = new HashSet<SmellyCell>();
-
 
         private static string RemoveFirstSymbol(string input)
         {
@@ -228,92 +234,51 @@ namespace ExcelAddIn3
             }
         }
 
-        public void ApplyEverywhere()
+        public void ApplyTransformation(ApplyTo scope)
         {
-            Log("ApplyEverywhere, " + theRibbon.dropDown1.SelectedItem.Label);
-            //get the transformation
+            if (theRibbon.dropDown1.SelectedItem == null)
+            {
+                Log("ApplyTransformation tried with empty dropdown");
+                return;
+            }
+
+            Log("Apply in " + scope.ToString() + " transformation " + theRibbon.dropDown1.SelectedItem.Label);
+
             FSharpTransformationRule T = AllTransformations.FirstOrDefault(x => x.Name == theRibbon.dropDown1.SelectedItem.Label);
 
-            foreach (var item in Application.Worksheets)
+            switch (scope)
             {
-                Excel.Worksheet Worksheet = ((Excel.Worksheet)item);
-                Excel.Range R = ((Excel.Range)Worksheet.Cells);
-
-                //find last filled cells
-                int Lower = 50;//R.Cells.Find("*", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Excel.XlSearchDirection.xlNext, Type.Missing, Type.Missing, Type.Missing).Row;
-                int RightMost = 50;//R.Cells.Find("*", Type.Missing, Excel.XlFindLookIn.xlValues, Type.Missing, Type.Missing, Excel.XlSearchDirection.xlNext, Type.Missing, Type.Missing, Type.Missing).Column;
-
-                for (int i = 1; i <= Lower; i++)
-                {
-                    for (int j = 1; j <= RightMost; j++)
+                case ApplyTo.Range:
+                    applyInRange(T, Application.Selection);
+                    break;
+                case ApplyTo.Worksheet:
+                    applyInRange(T, Application.ActiveSheet.UsedRange);
+                    break;
+                case ApplyTo.Workbook:
+                    foreach (Excel.Worksheet worksheet in Application.Worksheets)
                     {
-                        applyInCell(T, R.Cells.Item[i, j]);
+                        applyInRange(T, worksheet.UsedRange);
                     }
-                }
+                    break;
             }
-        }
-
-        public void ApplyinSheet()
-        {
-            Log("ApplyinSheet, " + theRibbon.dropDown1.SelectedItem.Label);
-
-            //get the transformation
-            FSharpTransformationRule T = AllTransformations.FirstOrDefault(x => x.Name == theRibbon.dropDown1.SelectedItem.Label);
-
-            Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
-            Excel.Range R = ((Excel.Range)activeWorksheet.Cells);
-
-            //find last filled cells
-            int Lower = 50;//R.Cells.Find("*", Type.Missing, Type.Missing, Type.Missing, Type.Missing, Excel.XlSearchDirection.xlNext, Type.Missing, Type.Missing, Type.Missing).Row;
-            int RightMost = 50;//R.Cells.Find("*", Type.Missing, Excel.XlFindLookIn.xlValues, Type.Missing, Type.Missing, Excel.XlSearchDirection.xlNext, Type.Missing, Type.Missing, Type.Missing).Column;
-        
-            for (int i = 1; i <= Lower; i++)
-            {
-                for (int j = 1; j <= RightMost; j++)
-                {
-                    applyInCell(T, R.Cells.Item[i, j]);
-                }    
-            }
-         }
-
-        public void ApplyinRange()
-        {
-            if (theRibbon.dropDown1.SelectedItem != null)
-            {
-                Log("ApplyinRange, " + theRibbon.dropDown1.SelectedItem.Label);
-                //get the transformation
-
-                FSharpTransformationRule T = AllTransformations.FirstOrDefault(x => x.Name == theRibbon.dropDown1.SelectedItem.Label);
-
-                Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
-                Excel.Range R = ((Excel.Range)Application.Selection);
-
-                foreach (Excel.Range Cell in R.Cells)
-                {
-                    applyInCell(T, Cell);
-                }
-            }
-            else
-            {
-                Log("ApplyinRange tried with empty dropdown");
-            }
-
 
             //after applying, we want to empty the preview box, find new rewrites and show them (in dropdown and preview)
             FindApplicableTransformations();
-            MakePreview();                                
+            MakePreview();
         }
 
-        private void applyInCell(FSharpTransformationRule T, Excel.Range Cell)
+        private void applyInRange(FSharpTransformationRule T, Excel.Range Range)
         {
-            string Formula = Cell.Formula;
-            if (Cell.HasFormula)
+            foreach (Excel.Range cell in Range.Cells)
             {
-                Formula = RemoveFirstSymbol(Formula);
-                if (T.CanBeAppliedonBool(Formula))
+                if (cell.HasFormula)
                 {
-                    Cell.Formula = "=" + T.ApplyOn(Formula);
-                    Cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
+                    var Formula = RemoveFirstSymbol(cell.Formula);
+                    if (T.CanBeAppliedonBool(Formula))
+                    {
+                        cell.Formula = "=" + T.ApplyOn(Formula);
+                        cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
+                    }
                 }
             }
         }

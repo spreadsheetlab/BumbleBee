@@ -22,7 +22,7 @@ namespace ExcelAddIn3
 
         private void button2_Click(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.ApplyinRange();
+            Globals.BBAddIn.ApplyTransformation(ApplyTo.Range);
         }
 
         private void dropDown1_SelectionChanged(object sender, RibbonControlEventArgs e)
@@ -32,12 +32,12 @@ namespace ExcelAddIn3
 
         private void button3_Click(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.ApplyEverywhere();
+            Globals.BBAddIn.ApplyTransformation(ApplyTo.Workbook);
         }
 
         private void button4_Click(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.ApplyinSheet();
+            Globals.BBAddIn.ApplyTransformation(ApplyTo.Worksheet);
         }
 
     #if DEBUG 
