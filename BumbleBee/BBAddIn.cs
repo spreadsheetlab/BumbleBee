@@ -177,7 +177,7 @@ namespace ExcelAddIn3
             theRibbon.dropDown1.Items.Clear();
             Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
             Excel.Range R = ((Excel.Range)Application.Selection);
-            string Formula = R.Formula;
+            string Formula = R.Item[1, 1].Formula;
 
             if (Formula.Length > 0)
             {
