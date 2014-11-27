@@ -213,23 +213,22 @@ namespace ExcelAddIn3
         {
             if (theRibbon.dropDown1.Items.Count > 0) //if we have transformations available
             {
-                //get the transformation
                 FSharpTransformationRule T = AllTransformations.FirstOrDefault(x => x.Name == theRibbon.dropDown1.SelectedItem.Label);
 
-                Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
                 Excel.Range R = ((Excel.Range)Application.Selection);
+                string formula = RemoveFirstSymbol(R.Item[1, 1].Formula);
+                theRibbon.Preview.Text = T.ApplyOn(formula);
 
                 if (R.Count == 1)
                 {
-                    string Formula = RemoveFirstSymbol(R.Formula);
-                    theRibbon.Preview.Text = T.ApplyOn(Formula);
+                    foreach (Excel.Worksheet worksheet in Application.Worksheets)
+                    {
+                        applyInRange(T, worksheet.UsedRange, true);
+                    }
                 }
                 else
                 {
-                    //get first cell for preview
-                    Excel.Range Cell1 = R.Cells.Item[0, 0];
-                    string Formula = RemoveFirstSymbol(Cell1.Formula);
-                    theRibbon.Preview.Text = T.ApplyOn(Formula);
+                    applyInRange(T, Application.Selection, true);
                 }
             }
         }
@@ -267,7 +266,7 @@ namespace ExcelAddIn3
             MakePreview();
         }
 
-        private void applyInRange(FSharpTransformationRule T, Excel.Range Range)
+        private void applyInRange(FSharpTransformationRule T, Excel.Range Range, Boolean previewOnly = false)
         {
             foreach (Excel.Range cell in Range.Cells)
             {
@@ -276,8 +275,15 @@ namespace ExcelAddIn3
                     var Formula = RemoveFirstSymbol(cell.Formula);
                     if (T.CanBeAppliedonBool(Formula))
                     {
-                        cell.Formula = "=" + T.ApplyOn(Formula);
-                        cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
+                        if (previewOnly)
+                        {
+                            cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Yellow);
+                        }
+                        else
+                        {
+                            cell.Formula = "=" + T.ApplyOn(Formula);
+                            cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
+                        }
                     }
                 }
             }
@@ -411,7 +417,6 @@ namespace ExcelAddIn3
             }
             throw new ArgumentException();
         }
-
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
