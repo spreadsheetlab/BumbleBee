@@ -43,14 +43,14 @@ namespace ExcelAddIn3
         Workbook
     }
 
-    public class SmellyCell
+    public class HighlightedCell
     {
         public Range Cell;
         public Object OriginalPattern;
         public Object OriginalColor;
         public Object OriginalComment;
 
-        public SmellyCell(Range cell,
+        public HighlightedCell(Range cell,
             Object originalPattern,
             Object originalColor,
             Object originalComment)
@@ -95,7 +95,7 @@ namespace ExcelAddIn3
                 return false;
             }
 
-            var smellyCell = obj as SmellyCell;
+            var smellyCell = obj as HighlightedCell;
             if (smellyCell == null)
             {
                 return false;
@@ -112,7 +112,7 @@ namespace ExcelAddIn3
         public Ribbon1 theRibbon;
         List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
         public AnalysisController AnalysisController;
-        private ISet<SmellyCell> coloredCells = new HashSet<SmellyCell>();
+        private ISet<HighlightedCell> smellyCells = new HashSet<HighlightedCell>();
 
         private static string RemoveFirstSymbol(string input)
         {
@@ -352,11 +352,11 @@ namespace ExcelAddIn3
 
         private void decolorCells()
         {
-            foreach (SmellyCell smellyCell in coloredCells)
+            foreach (HighlightedCell smellyCell in smellyCells)
             {
                 smellyCell.Reset();
             }
-            coloredCells.Clear();
+            smellyCells.Clear();
         }
 
         private void ColorCell(Smell smell)
@@ -369,11 +369,11 @@ namespace ExcelAddIn3
 
                 var excelCell = Application.Sheets[cell.Worksheet.Name].Cells[cell.Location.Row + 1, cell.Location.Column + 1];
 
-                var smellyCell = new SmellyCell(excelCell, excelCell.Interior.Pattern, excelCell.Interior.Color, excelCell.Comment);
+                var smellyCell = new HighlightedCell(excelCell, excelCell.Interior.Pattern, excelCell.Interior.Color, excelCell.Comment);
                 smellyCell.Apply(smell);
-                if (!coloredCells.Any(x => x.Equals(smellyCell)))
+                if (!smellyCells.Any(x => x.Equals(smellyCell)))
                 {
-                    coloredCells.Add(smellyCell);
+                    smellyCells.Add(smellyCell);
                 }
             }
             catch (Exception e)
