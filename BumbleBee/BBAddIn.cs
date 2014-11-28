@@ -64,7 +64,7 @@ namespace ExcelAddIn3
         public void Reset(){
             Cell.Interior.Color = OriginalColor;
             Cell.Interior.Pattern = OriginalPattern;
-            Cell.Comment.Delete();
+            if (Cell.Comment != null) Cell.Comment.Delete();
             if (OriginalComment != null) Cell.AddComment(OriginalComment.ToString());
         }
 
@@ -103,6 +103,11 @@ namespace ExcelAddIn3
 
             return (Cell.Address == smellyCell.Cell.Address);
         }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 
     public partial class BBAddIn
@@ -113,6 +118,7 @@ namespace ExcelAddIn3
         List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
         public AnalysisController AnalysisController;
         private ISet<HighlightedCell> smellyCells = new HashSet<HighlightedCell>();
+        private ISet<HighlightedCell> transformationCells = new HashSet<HighlightedCell>();
 
         private static string RemoveFirstSymbol(string input)
         {
@@ -215,6 +221,7 @@ namespace ExcelAddIn3
 
         public void MakePreview()
         {
+            decolorCells(transformationCells);
             if (theRibbon.dropDown1.Items.Count > 0) //if we have transformations available
             {
                 FSharpTransformationRule T = AllTransformations.FirstOrDefault(x => x.Name == theRibbon.dropDown1.SelectedItem.Label);
@@ -244,6 +251,8 @@ namespace ExcelAddIn3
                 Log("ApplyTransformation tried with empty dropdown");
                 return;
             }
+
+            decolorCells(transformationCells);
 
             Log("Apply in " + scope.ToString() + " transformation " + theRibbon.dropDown1.SelectedItem.Label);
 
@@ -281,7 +290,12 @@ namespace ExcelAddIn3
                     {
                         if (previewOnly)
                         {
+                            var transformationCell = new HighlightedCell(cell, cell.Interior.Pattern, cell.Interior.Color, cell.Comment);
                             cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Yellow);
+                            if (!transformationCells.Any(x => x.Equals(transformationCell)))
+                            {
+                                transformationCells.Add(transformationCell);
+                            }
                         }
                         else
                         {
@@ -334,7 +348,7 @@ namespace ExcelAddIn3
 
         private void ColorSmellsOfType(String type)
         {
-            decolorCells();
+            decolorCells(smellyCells);
 
             List<Smell> smellsOfType;
 
@@ -354,13 +368,13 @@ namespace ExcelAddIn3
             }
         }
 
-        private void decolorCells()
+        private void decolorCells(ISet<HighlightedCell> cells)
         {
-            foreach (HighlightedCell smellyCell in smellyCells)
+            foreach (HighlightedCell cell in cells)
             {
-                smellyCell.Reset();
+                cell.Reset();
             }
-            smellyCells.Clear();
+            cells.Clear();
         }
 
         private void ColorCell(Smell smell)
