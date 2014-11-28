@@ -300,7 +300,7 @@ namespace ExcelAddIn3
                         else
                         {
                             cell.Formula = "=" + T.ApplyOn(Formula);
-                            cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
+                            cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Green);
                         }
                     }
                 }
