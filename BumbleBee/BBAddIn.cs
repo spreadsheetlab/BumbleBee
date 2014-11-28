@@ -309,6 +309,7 @@ namespace ExcelAddIn3
 
         public void ColorSmells()
         {
+            InitializeTransformations();
             SpreadsheetInfo.SetLicense("E7OS-D3IG-PM8L-A03O");
 
             if (!Application.ActiveWorkbook.Saved)
@@ -343,6 +344,7 @@ namespace ExcelAddIn3
 
         public void SelectSmellsOfType()
         {
+            InitializeTransformations();
             ColorSmellsOfType(theRibbon.selectSmellType.SelectedItem.Tag);
         }
 
