@@ -167,14 +167,18 @@ namespace ExcelAddIn3
             AllTransformations.Sort(T.Compare);          
         }
 
- 
-
+        private void InitializeTransformations()
+        {
+            theRibbon.Preview.Text = "";
+            theRibbon.dropDown1.Items.Clear();
+            decolorCells(transformationCells);
+        }
 
         public void FindApplicableTransformations()
         {
             Log("FindApplicableTransformations");
 
-            theRibbon.dropDown1.Items.Clear();
+            InitializeTransformations();
             Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
             Excel.Range R = ((Excel.Range)Application.Selection);
             string Formula = R.Item[1, 1].Formula;
@@ -446,8 +450,7 @@ namespace ExcelAddIn3
 
         void Application_SheetSelectionChange(object Sh, Excel.Range Target)
         {
-            theRibbon.Preview.Text = "";
-            theRibbon.dropDown1.Items.Clear();
+            InitializeTransformations();
         }
 
 
