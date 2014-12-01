@@ -138,6 +138,7 @@ namespace ExcelAddIn3
             var workbook = Application.ActiveWorkbook;
             Excel.Worksheet BumbleBeeSheet = workbook.Sheets.Add(After: workbook.Sheets[workbook.Sheets.Count]);
             BumbleBeeSheet.Name = "_bumblebeerules";
+            loadExampleTransformations(BumbleBeeSheet);
             InitializeBB();
         }
 
@@ -447,6 +448,28 @@ namespace ExcelAddIn3
                 }
             }
             return null;
+        }
+
+        private void loadExampleTransformations(Excel.Worksheet BumbleBeeSheet)
+        {
+            String[,] exampleTransformations = {
+                                               {"'IF([c]<[d],[c],[d])", "'MIN([c],[d])", "3", "IF to MIN"},
+                                               {"'IF([c]>[d],[c],[d])", "'MAX([c],[d])", "3", "IF to MAX"},
+                                               {"SUM({r})/COUNT({r})", "AVERAGE({r})", "2", "SUM and COUNT to AVERAGE"},
+                                               {"[c]+[d]", "SUM([c],[d])", "4", "Plus to SUM"},
+                                               {"SUM([x],SUM([y]))", "SUM([x],[y])", "5", "Remove Double SUM"},
+                                               {"SUM({i,j}, {i,j+1}, [k])", "SUM({i,j}:{i,j+1},[k])", "6", "Merge Adjacent SUMs"},
+                                               {"SUM({x,y}: {i,j}, {i,j+1},[k])", "SUM({x,y}:{i,j+1},[k])", "7", "Merge Adjacent SUMs1"},
+                                               {"SUM({x,y}: {i,j}, {i,j+1} )", "SUM({x,y}:{i,j+1})", "8", "Merge Adjacent SUMs2"},
+                                               {"([c])", "[c]", "9", "Remove Braces"}
+                                               };
+            for (var i = 0; i < 9; i++)
+            {
+                for (var j = 0; j < 4; j++)
+                {
+                    BumbleBeeSheet.Cells[i + 1, j + 1] = exampleTransformations[i, j];
+                }
+            }
         }
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
