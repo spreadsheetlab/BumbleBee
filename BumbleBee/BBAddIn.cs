@@ -152,12 +152,16 @@ namespace ExcelAddIn3
             Excel.Worksheet Sheet = GetWorksheetByName("_bumblebeerules");
             if (Sheet == null)
             {
+                theRibbon.groupInitialize.Visible = true;
+                theRibbon.groupBumbleBee.Visible = false;
                 return;
             }
 
             //initialize smell controls
             theRibbon.selectSmellType.Items.Clear();
             theRibbon.selectSmellType.Enabled = false;
+            theRibbon.groupInitialize.Visible = false;
+            theRibbon.groupBumbleBee.Visible = true;
 
             //find last filled cells
             int Lower = 50;
