@@ -135,10 +135,14 @@ namespace ExcelAddIn3
 
         public void AddSheetBumbleBeeTransformations()
         {
+            Excel.Worksheet selectedSheet = Application.ActiveSheet;
+
             var workbook = Application.ActiveWorkbook;
             Excel.Worksheet BumbleBeeSheet = workbook.Sheets.Add(After: workbook.Sheets[workbook.Sheets.Count]);
             BumbleBeeSheet.Name = "_bumblebeerules";
             loadExampleTransformations(BumbleBeeSheet);
+            selectedSheet.Select();
+
             InitializeBB();
         }
 
