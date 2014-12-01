@@ -133,15 +133,26 @@ namespace ExcelAddIn3
             
         }
 
+        public void AddSheetBumbleBeeTransformations()
+        {
+            var workbook = Application.ActiveWorkbook;
+            Excel.Worksheet BumbleBeeSheet = workbook.Sheets.Add(After: workbook.Sheets[workbook.Sheets.Count]);
+            BumbleBeeSheet.Name = "_bumblebeerules";
+            InitializeBB();
+        }
+
         public void InitializeBB()
         {
+            //initialize transformations
+            Excel.Worksheet Sheet = GetWorksheetByName("_bumblebeerules");
+            if (Sheet == null)
+            {
+                return;
+            }
+
             //initialize smell controls
             theRibbon.selectSmellType.Items.Clear();
             theRibbon.selectSmellType.Enabled = false;
-
-            //initialize transformations
-            
-            Excel.Worksheet Sheet = GetWorksheetByName("Transformations");
 
             //find last filled cells
             int Lower = 50;
@@ -435,7 +446,7 @@ namespace ExcelAddIn3
                     return worksheet;
                 }
             }
-            throw new ArgumentException();
+            return null;
         }
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
@@ -450,7 +461,6 @@ namespace ExcelAddIn3
             InitializeBB();
         }
 
-
         #region VSTO generated code
 
         /// <summary>
@@ -462,14 +472,12 @@ namespace ExcelAddIn3
             this.Startup += new EventHandler(ThisAddIn_Startup);
             Application.WorkbookOpen += new Excel.AppEvents_WorkbookOpenEventHandler(Application_WorkbookOpen);
             Application.SheetSelectionChange += new Excel.AppEvents_SheetSelectionChangeEventHandler(Application_SheetSelectionChange);
-}
+        }
 
         void Application_SheetSelectionChange(object Sh, Excel.Range Target)
         {
             InitializeTransformations();
         }
-
-
 
 
 

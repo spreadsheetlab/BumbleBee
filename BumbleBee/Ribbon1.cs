@@ -41,10 +41,6 @@ namespace ExcelAddIn3
         }
 
     #if DEBUG 
-        private void Initialize_Click(object sender, RibbonControlEventArgs e)
-        {
-            Globals.BBAddIn.InitializeBB();
-        }
 
         private void button5_Click(object sender, RibbonControlEventArgs e)
         {
@@ -54,6 +50,11 @@ namespace ExcelAddIn3
         private void selectSmellType_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
             Globals.BBAddIn.SelectSmellsOfType();
+        }
+
+        private void buttonInitializeBumbleBee_Click_1(object sender, RibbonControlEventArgs e)
+        {
+            Globals.BBAddIn.AddSheetBumbleBeeTransformations();
         }
     }
 

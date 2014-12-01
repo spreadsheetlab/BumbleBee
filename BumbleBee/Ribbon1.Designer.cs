@@ -34,9 +34,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Ribbon1));
             this.tab1 = this.Factory.CreateRibbonTab();
             this.BumbleBee = this.Factory.CreateRibbonTab();
-            this.group2 = this.Factory.CreateRibbonGroup();
+            this.groupInitialize = this.Factory.CreateRibbonGroup();
+            this.buttonInitializeBumbleBee = this.Factory.CreateRibbonButton();
+            this.groupBumbleBee = this.Factory.CreateRibbonGroup();
             this.button1 = this.Factory.CreateRibbonButton();
             this.dropDown1 = this.Factory.CreateRibbonDropDown();
             this.Preview = this.Factory.CreateRibbonEditBox();
@@ -49,7 +52,8 @@
             this.selectSmellType = this.Factory.CreateRibbonDropDown();
             this.tab1.SuspendLayout();
             this.BumbleBee.SuspendLayout();
-            this.group2.SuspendLayout();
+            this.groupInitialize.SuspendLayout();
+            this.groupBumbleBee.SuspendLayout();
             this.group1.SuspendLayout();
             // 
             // tab1
@@ -60,22 +64,39 @@
             // 
             // BumbleBee
             // 
-            this.BumbleBee.Groups.Add(this.group2);
+            this.BumbleBee.Groups.Add(this.groupInitialize);
+            this.BumbleBee.Groups.Add(this.groupBumbleBee);
             this.BumbleBee.Groups.Add(this.group1);
             this.BumbleBee.Label = "BumbleBee";
             this.BumbleBee.Name = "BumbleBee";
             // 
-            // group2
+            // groupInitialize
             // 
-            this.group2.Items.Add(this.button1);
-            this.group2.Items.Add(this.dropDown1);
-            this.group2.Items.Add(this.Preview);
-            this.group2.Items.Add(this.separator1);
-            this.group2.Items.Add(this.button2);
-            this.group2.Items.Add(this.button4);
-            this.group2.Items.Add(this.button3);
-            this.group2.Label = "Basic Options";
-            this.group2.Name = "group2";
+            this.groupInitialize.Items.Add(this.buttonInitializeBumbleBee);
+            this.groupInitialize.Label = "Transformations";
+            this.groupInitialize.Name = "groupInitialize";
+            // 
+            // buttonInitializeBumbleBee
+            // 
+            this.buttonInitializeBumbleBee.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.buttonInitializeBumbleBee.Image = ((System.Drawing.Image)(resources.GetObject("buttonInitializeBumbleBee.Image")));
+            this.buttonInitializeBumbleBee.Label = "Initialize BumbleBee";
+            this.buttonInitializeBumbleBee.Name = "buttonInitializeBumbleBee";
+            this.buttonInitializeBumbleBee.ShowImage = true;
+            this.buttonInitializeBumbleBee.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.buttonInitializeBumbleBee_Click_1);
+            // 
+            // groupBumbleBee
+            // 
+            this.groupBumbleBee.Items.Add(this.button1);
+            this.groupBumbleBee.Items.Add(this.dropDown1);
+            this.groupBumbleBee.Items.Add(this.Preview);
+            this.groupBumbleBee.Items.Add(this.separator1);
+            this.groupBumbleBee.Items.Add(this.button2);
+            this.groupBumbleBee.Items.Add(this.button4);
+            this.groupBumbleBee.Items.Add(this.button3);
+            this.groupBumbleBee.Label = "Transformations";
+            this.groupBumbleBee.Name = "groupBumbleBee";
+            this.groupBumbleBee.Visible = false;
             // 
             // button1
             // 
@@ -150,8 +171,10 @@
             this.tab1.PerformLayout();
             this.BumbleBee.ResumeLayout(false);
             this.BumbleBee.PerformLayout();
-            this.group2.ResumeLayout(false);
-            this.group2.PerformLayout();
+            this.groupInitialize.ResumeLayout(false);
+            this.groupInitialize.PerformLayout();
+            this.groupBumbleBee.ResumeLayout(false);
+            this.groupBumbleBee.PerformLayout();
             this.group1.ResumeLayout(false);
             this.group1.PerformLayout();
 
@@ -161,7 +184,7 @@
 
         internal Microsoft.Office.Tools.Ribbon.RibbonTab tab1;
         internal Microsoft.Office.Tools.Ribbon.RibbonTab BumbleBee;
-        internal Microsoft.Office.Tools.Ribbon.RibbonGroup group2;
+        internal Microsoft.Office.Tools.Ribbon.RibbonGroup groupBumbleBee;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton button1;
         internal Microsoft.Office.Tools.Ribbon.RibbonDropDown dropDown1;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton button2;
@@ -172,6 +195,8 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup group1;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton analyzeButton;
         internal Microsoft.Office.Tools.Ribbon.RibbonDropDown selectSmellType;
+        internal Microsoft.Office.Tools.Ribbon.RibbonGroup groupInitialize;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonInitializeBumbleBee;
 
         #if DEBUG
             internal Microsoft.Office.Tools.Ribbon.RibbonButton Initialize;
