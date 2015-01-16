@@ -112,8 +112,6 @@ namespace ExcelAddIn3
 
     public partial class BBAddIn
     {
-
-
         public Ribbon1 theRibbon;
         List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
         public AnalysisController AnalysisController;
@@ -206,10 +204,13 @@ namespace ExcelAddIn3
 
             InitializeTransformations();
             Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
-            Excel.Range R = ((Excel.Range)Application.Selection);
-            string Formula = R.Item[1, 1].Formula;
+            Excel.Range selectedRange = ((Excel.Range)Application.Selection);
+            Excel.Range selectedCell = (Excel.Range) selectedRange.Item[1, 1];
+            string Formula = selectedCell.Formula;
 
-            if (Formula.Length > 0)
+            bool matchFound = false;
+
+            if (selectedCell.HasFormula && Formula.Length > 0)
             {
                 Formula = RemoveFirstSymbol(Formula);
 
@@ -217,16 +218,25 @@ namespace ExcelAddIn3
                 {
                     if (t.CanBeAppliedonBool(Formula))
                     {
+                        matchFound = true;
                         RibbonDropDownItem item = Globals.Factory.GetRibbonFactory().CreateRibbonDropDownItem();
                         item.Label = t.Name;
                         theRibbon.dropDown1.Items.Add(item);
                     }
                 }
-                if (AllTransformations.Count > 0)
+                if (theRibbon.dropDown1.Items.Count > 0)
                 {
                     MakePreview();
-                } 
-            }     
+                }
+                else
+                {
+                    MessageBox.Show("No applicable rewrites found.");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Cell does not contain a formula.");
+            }
         }
 
         private void Log(string LogMessage)
