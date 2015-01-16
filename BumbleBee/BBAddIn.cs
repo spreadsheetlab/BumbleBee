@@ -22,20 +22,6 @@ using System.Windows.Forms;
 
 namespace ExcelAddIn3
 {
-    public class TransformationComparer : System.Collections.IComparer
-    {
-        public int Compare(object x, object y)
-        {
-
-            if (((FSharpTransformationRule)x).priority == ((FSharpTransformationRule)y).priority)
-                return 0;
-            else if (((FSharpTransformationRule)x).priority > ((FSharpTransformationRule)y).priority)
-                return 1;
-            else
-                return -1;
-        }
-    }
-
     public enum ApplyTo
     {
         Range,
@@ -186,9 +172,7 @@ namespace ExcelAddIn3
 
 
             //order by priority
-            TransformationComparer T = new TransformationComparer();
-
-            AllTransformations.Sort(T.Compare);          
+            AllTransformations.Sort();          
         }
 
         private void InitializeTransformations()

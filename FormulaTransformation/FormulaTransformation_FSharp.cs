@@ -11,12 +11,17 @@ using FSharpEngine;
 
 namespace Infotron.FSharpFormulaTransformation
 {
-    public class FSharpTransformationRule
+    public class FSharpTransformationRule : IComparable<FSharpTransformationRule>
     {
         public string Name;
         public ParseTreeNode from;
         public ParseTreeNode to;
         public double priority;
+
+        public int CompareTo(FSharpTransformationRule y)
+        {
+            return priority.CompareTo(y.priority);
+        }
 
         public ParseTreeNode ParseToTree(string input) 
         {
