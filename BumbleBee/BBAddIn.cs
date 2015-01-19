@@ -196,6 +196,8 @@ namespace ExcelAddIn3
         private void InitializeTransformations()
         {
             theRibbon.Preview.Text = "";
+            theRibbon.valuePreview.Text = "";
+            theRibbon.valuePreview.ShowImage = false;
             theRibbon.dropDown1.Items.Clear();
             decolorCells(transformationCells);
         }
@@ -249,6 +251,8 @@ namespace ExcelAddIn3
                 Excel.Range R = ((Excel.Range)Application.Selection);
                 string formula = RemoveFirstSymbol(R.Item[1, 1].Formula);
                 theRibbon.Preview.Text = T.ApplyOn(formula);
+                theRibbon.valuePreview.Text = getValue(R.Item[1, 1], theRibbon.Preview.Text);
+                theRibbon.valuePreview.ShowImage = (theRibbon.valuePreview.Text != R.Item[1, 1].Value.ToString());
 
                 if (R.Count == 1)
                 {
@@ -262,6 +266,16 @@ namespace ExcelAddIn3
                     applyInRange(T, Application.Selection, true);
                 }
             }
+        }
+
+        private String getValue(Range cell, String formula)
+        {
+            string value;
+            string currentFormula = cell.Formula;
+            cell.Formula = "=" + formula;
+            value = cell.Value.ToString();
+            cell.Formula = currentFormula;
+            return value;
         }
 
         public void ApplyTransformation(ApplyTo scope)
