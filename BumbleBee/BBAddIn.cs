@@ -208,8 +208,6 @@ namespace ExcelAddIn3
             Excel.Range selectedCell = (Excel.Range) selectedRange.Item[1, 1];
             string Formula = selectedCell.Formula;
 
-            bool matchFound = false;
-
             if (selectedCell.HasFormula && Formula.Length > 0)
             {
                 Formula = RemoveFirstSymbol(Formula);
@@ -218,7 +216,6 @@ namespace ExcelAddIn3
                 {
                     if (t.CanBeAppliedonBool(Formula))
                     {
-                        matchFound = true;
                         RibbonDropDownItem item = Globals.Factory.GetRibbonFactory().CreateRibbonDropDownItem();
                         item.Label = t.Name;
                         theRibbon.dropDown1.Items.Add(item);
