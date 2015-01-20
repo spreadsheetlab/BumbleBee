@@ -164,10 +164,10 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Infotron.BumbleBee_1_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>Infotron.BumbleBee_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>BAC606BF77521095494EF7AEB3BF73E4191DFBDE</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>D4CCE695DB72AE2E3A03EED0FA241B8E23D56408</ManifestCertificateThumbprint>
   </PropertyGroup>
   <!--
     This section specifies references for the project.
@@ -301,6 +301,7 @@
     <None Include="BumbleBee_TemporaryKey.pfx" />
     <None Include="Infotron.BumbleBee_1_TemporaryKey.pfx" />
     <None Include="Infotron.BumbleBee_2_TemporaryKey.pfx" />
+    <None Include="Infotron.BumbleBee_TemporaryKey.pfx" />
     <None Include="NLog.config" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
