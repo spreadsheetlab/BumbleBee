@@ -278,6 +278,11 @@ namespace ExcelAddIn3
             return value;
         }
 
+        private bool valueChanges(Range cell, String formula)
+        {
+            return getValue(cell, formula) != cell.Value.ToString();
+        }
+
         public void ApplyTransformation(ApplyTo scope)
         {
             if (theRibbon.dropDown1.SelectedItem == null)
@@ -333,7 +338,20 @@ namespace ExcelAddIn3
                         }
                         else
                         {
-                            cell.Formula = "=" + T.ApplyOn(Formula);
+                            var transformedFormula = T.ApplyOn(Formula);
+                            if (valueChanges(cell, transformedFormula))
+                            {
+                                if(MessageBox.Show("The transformation causes the value of cell " +
+                                    cell.Worksheet.Name + ":" + cell.get_Address(false,false,Excel.XlReferenceStyle.xlA1) +
+                                    " to change from " + cell.Value + " to " + getValue(cell, transformedFormula) +
+                                    ". Do you want to continue?",
+                                    "Alert: Cell value change",
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Warning)
+                                    == DialogResult.No)
+                                    return;
+                            }
+                            cell.Formula = "=" + transformedFormula;
                             cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Green);
                         }
                     }
