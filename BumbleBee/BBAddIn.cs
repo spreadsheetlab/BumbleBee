@@ -104,8 +104,7 @@ namespace ExcelAddIn3
 
         private static string RemoveFirstSymbol(string input)
         {
-            input = input.Substring(1, input.Length - 1);
-            return input;
+            return input.Substring(1);
         }
 
         protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
