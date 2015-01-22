@@ -6,7 +6,6 @@ using System.Xml.Linq;
 using Excel = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
 using Microsoft.Office.Tools.Excel;
-using System.Collections;
 using Microsoft.Office.Tools.Ribbon;
 using Infotron.FSharpFormulaTransformation;
 using Infotron.PerfectXL.SmellAnalyzer;
@@ -16,7 +15,6 @@ using PerfectXL.Domain.Observation;
 using Infotron.PerfectXL.SmellAnalyzer.SmellAnalyzer;
 using System.Drawing;
 using Infotron.PerfectXL.DataModel;
-using Infotron.Util;
 using Microsoft.Office.Interop.Excel;
 using System.Windows.Forms;
 
@@ -99,10 +97,10 @@ namespace ExcelAddIn3
     public partial class BBAddIn
     {
         public Ribbon1 theRibbon;
-        List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
+        readonly List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
         public AnalysisController AnalysisController;
-        private ISet<HighlightedCell> smellyCells = new HashSet<HighlightedCell>();
-        private ISet<HighlightedCell> transformationCells = new HashSet<HighlightedCell>();
+        private readonly ISet<HighlightedCell> smellyCells = new HashSet<HighlightedCell>();
+        private readonly ISet<HighlightedCell> transformationCells = new HashSet<HighlightedCell>();
 
         private static string RemoveFirstSymbol(string input)
         {
@@ -152,12 +150,12 @@ namespace ExcelAddIn3
 
             for (int i = 1; i <= Lower; i++)
             {
-                string From = Sheet.Cells.Item[i, 1].Value;
+                string From = ((Range)Sheet.Cells.Item[i, 1]).Value;
                 if (From != null)
                 {
-                    string To = Sheet.Cells.Item[i, 2].Value;
-                    double prio = Sheet.Cells.Item[i, 3].Value;
-                    string Name = Sheet.Cells.Item[i, 4].Value;
+                    string To = ((Range)Sheet.Cells.Item[i, 2]).Value;
+                    double prio = ((Range)Sheet.Cells.Item[i, 3]).Value;
+                    string Name = ((Range)Sheet.Cells.Item[i, 4]).Value;
 
                     FSharpTransformationRule S = new FSharpTransformationRule();
                     S.from = S.ParseToTree(From);
@@ -187,9 +185,9 @@ namespace ExcelAddIn3
             Log("FindApplicableTransformations");
 
             InitializeTransformations();
-            Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
-            Excel.Range selectedRange = ((Excel.Range)Application.Selection);
-            Excel.Range selectedCell = (Excel.Range) selectedRange.Item[1, 1];
+            //Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
+            Range selectedRange = ((Range)Application.Selection);
+            Range selectedCell = (Range)selectedRange.Item[1, 1];
             string Formula = selectedCell.Formula;
 
             if (selectedCell.HasFormula && Formula.Length > 0)
@@ -237,20 +235,23 @@ namespace ExcelAddIn3
             {
                 FSharpTransformationRule T = AllTransformations.FirstOrDefault(x => x.Name == theRibbon.dropDown1.SelectedItem.Label);
 
-                Excel.Range R = ((Excel.Range)Application.Selection);
-                string formula = RemoveFirstSymbol(R.Item[1, 1].Formula);
-                theRibbon.Preview.Text = T.ApplyOn(formula);
+                if (T != null)
+                {
+                    Range R = ((Range)Application.Selection);
+                    string formula = RemoveFirstSymbol(((Range)R.Item[1, 1]).Formula);
+                    theRibbon.Preview.Text = T.ApplyOn(formula);
 
-                if (R.Count == 1)
-                {
-                    foreach (Excel.Worksheet worksheet in Application.Worksheets)
+                    if (R.Count == 1)
                     {
-                        applyInRange(T, worksheet.UsedRange, true);
+                        foreach (Excel.Worksheet worksheet in Application.Worksheets)
+                        {
+                            applyInRange(T, worksheet.UsedRange, true);
+                        }
                     }
-                }
-                else
-                {
-                    applyInRange(T, Application.Selection, true);
+                    else
+                    {
+                        applyInRange(T, Application.Selection, true);
+                    }
                 }
             }
         }
@@ -407,8 +408,9 @@ namespace ExcelAddIn3
                     smellyCells.Add(smellyCell);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
+                // ignored
             }
         }
 
@@ -439,14 +441,9 @@ namespace ExcelAddIn3
 
         private Excel.Worksheet GetWorksheetByName(string name)
         {
-            foreach (Excel.Worksheet worksheet in Application.Worksheets)
-            {
-                if (worksheet.Name == name)
-                {
-                    return worksheet;
-                }
-            }
-            return null;
+            return Application.Worksheets
+                .Cast<Excel.Worksheet>()
+                .FirstOrDefault(worksheet => worksheet.Name == name);
         }
 
         private void loadExampleTransformations(Excel.Worksheet BumbleBeeSheet)
@@ -509,6 +506,6 @@ namespace ExcelAddIn3
 
 
         
-        #endregion
+        #endregion  
     }
 }
