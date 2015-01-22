@@ -40,7 +40,7 @@ namespace ExcelAddIn3
             Globals.BBAddIn.ApplyTransformation(ApplyTo.Worksheet);
         }
 
-    #if DEBUG 
+        #if DEBUG 
 
         private void button5_Click(object sender, RibbonControlEventArgs e)
         {
@@ -56,7 +56,7 @@ namespace ExcelAddIn3
         {
             Globals.BBAddIn.AddSheetBumbleBeeTransformations();
         }
-    }
 
-    #endif
+        #endif
+    }
 }
