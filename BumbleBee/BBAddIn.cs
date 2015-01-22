@@ -10,6 +10,7 @@ using Microsoft.Office.Tools.Ribbon;
 using Infotron.FSharpFormulaTransformation;
 using Infotron.PerfectXL.SmellAnalyzer;
 using System.ComponentModel;
+using System.Diagnostics;
 using GemBox.Spreadsheet;
 using PerfectXL.Domain.Observation;
 using Infotron.PerfectXL.SmellAnalyzer.SmellAnalyzer;
@@ -17,6 +18,7 @@ using System.Drawing;
 using Infotron.PerfectXL.DataModel;
 using Microsoft.Office.Interop.Excel;
 using System.Windows.Forms;
+using ExcelAddIn3.UserDialogs;
 
 namespace ExcelAddIn3
 {
@@ -472,11 +474,100 @@ namespace ExcelAddIn3
 
         }
 
-              
-
         void Application_WorkbookOpen(Excel.Workbook Wb)
         {
             InitializeBB();
+        }
+
+        public enum ExtractDirection
+        {
+            Left, Right, Up, Down, Fixed
+        }
+
+        // TODO: Expand to ranges
+        public void extractFormula()
+        {
+            if (Application.Selection.Count != 1)
+            {
+                MessageBox.Show("Select a single cell");
+                return;
+            }
+
+            Range from = Application.Selection;
+
+            if (!from.HasFormula)
+            {
+                MessageBox.Show("Cell does not contain formula");
+                return;
+            }
+
+            var dialog = new ExtractFormulaDialog(from);
+            dialog.ShowDialog();
+
+            if (dialog.DialogResult != true)
+            {
+                return;
+            }
+
+            ExtractDirection dir = dialog.Direction;
+            
+            if (dir == ExtractDirection.Left && from.Column == 1)
+            {
+                // Create a new column to the left
+                from.EntireColumn.Insert(XlInsertShiftDirection.xlShiftToRight, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+            } else if (dir == ExtractDirection.Up && from.Row == 0)
+            {
+                from.EntireRow.Insert(XlInsertShiftDirection.xlShiftDown, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
+            }
+
+            Range to = null;
+            switch (dir)
+            {
+                case ExtractDirection.Down:
+                    to = from.Offset[1, 0];
+                    break;
+                case ExtractDirection.Up:
+                    to = from.Offset[-1, 0];
+                    break;
+                case ExtractDirection.Left:
+                    to = from.Offset[0, -1];
+                    break;
+                case ExtractDirection.Right:
+                    to = from.Offset[0, 1];
+                    break;
+                case ExtractDirection.Fixed:
+                    to = Application.ActiveSheet.Cells.Range[dialog.CellAddress];
+                    break;
+            }
+
+            if (to == null)
+            {
+                Log("Extract formula target was null");
+                return;
+            }
+
+            // Change cell formula at target location to new subformula
+            to.Formula = "=" + dialog.Formula;
+
+            // Change cell to contain reference to new location
+            // The string replace is a bit ugly, but I couldn't think of a case where it wouldn't work
+            // as such using a transformationrule seems overpowered
+            string oldFormula = from.Formula;
+            string newFormula = oldFormula.Replace(dialog.Formula, to.Address[true, true]);
+            from.Formula = newFormula;
+
+            // TODO: Provide some sort of undo functionality if possible
+            // Warning: You cannot allow Excel to undo the actions of a VSTO plugin, so that path is doomed to fail :(
+            // Quote from page 176 from "Visual Studio Tools for Office 2007" by E. Carter:
+            /* Undo in Excel
+             *      Excel has an Undo method that can be used to undo the last few actions
+             *      taken by the user. However, Excel does not support undoing actions taken
+             *      by your code. As soon as your code touches the object model, Excel clears
+             *      the undo history and it does not add any of the actions your code performs
+             *      to the undo history.
+             */
+            // Best option would be a manual undo stack, but that still goes against user expectations:
+            //      (will Ctrl+Z work?, cannot undo further than Add-in actions etc.)
         }
 
         #region VSTO generated code
