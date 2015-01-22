@@ -298,9 +298,7 @@
       <DependentUpon>Ribbon1.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="App.config" />
-    <None Include="BumbleBee_TemporaryKey.pfx" />
     <None Include="Infotron.BumbleBee_1_TemporaryKey.pfx" />
-    <None Include="Infotron.BumbleBee_2_TemporaryKey.pfx" />
     <None Include="Infotron.BumbleBee_TemporaryKey.pfx" />
     <None Include="NLog.config" />
     <None Include="packages.config" />
