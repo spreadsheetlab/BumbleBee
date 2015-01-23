@@ -288,6 +288,7 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="RefactoringHelper.cs" />
     <Compile Include="UserDialogs\extractFormulaDialog.xaml.cs">
       <DependentUpon>extractFormulaDialog.xaml</DependentUpon>
     </Compile>
@@ -364,6 +365,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Util\" />
   </ItemGroup>
   <!-- Include the build rules for a C# project. -->
   <PropertyGroup>

@@ -479,11 +479,6 @@ namespace ExcelAddIn3
             InitializeBB();
         }
 
-        public enum ExtractDirection
-        {
-            Left, Right, Up, Down, Fixed
-        }
-
         // TODO: Expand to ranges
         public void extractFormula()
         {
@@ -509,13 +504,13 @@ namespace ExcelAddIn3
                 return;
             }
 
-            ExtractDirection dir = dialog.Direction;
+            RefactoringHelper.Direction dir = dialog.Direction;
             
-            if (dir == ExtractDirection.Left && from.Column == 1)
+            if (dir == RefactoringHelper.Direction.Left && from.Column == 1)
             {
                 // Create a new column to the left
                 from.EntireColumn.Insert(XlInsertShiftDirection.xlShiftToRight, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
-            } else if (dir == ExtractDirection.Up && from.Row == 0)
+            } else if (dir == RefactoringHelper.Direction.Up && from.Row == 0)
             {
                 from.EntireRow.Insert(XlInsertShiftDirection.xlShiftDown, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
             }
@@ -523,19 +518,19 @@ namespace ExcelAddIn3
             Range to = null;
             switch (dir)
             {
-                case ExtractDirection.Down:
+                case RefactoringHelper.Direction.Down:
                     to = from.Offset[1, 0];
                     break;
-                case ExtractDirection.Up:
+                case RefactoringHelper.Direction.Up:
                     to = from.Offset[-1, 0];
                     break;
-                case ExtractDirection.Left:
+                case RefactoringHelper.Direction.Left:
                     to = from.Offset[0, -1];
                     break;
-                case ExtractDirection.Right:
+                case RefactoringHelper.Direction.Right:
                     to = from.Offset[0, 1];
                     break;
-                case ExtractDirection.Fixed:
+                case RefactoringHelper.Direction.Fixed:
                     to = Application.ActiveSheet.Cells.Range[dialog.CellAddress];
                     break;
             }
@@ -549,12 +544,7 @@ namespace ExcelAddIn3
             // Change cell formula at target location to new subformula
             to.Formula = "=" + dialog.Formula;
 
-            // Change cell to contain reference to new location
-            // The string replace is a bit ugly, but I couldn't think of a case where it wouldn't work
-            // as such using a transformationrule seems overpowered
-            string oldFormula = from.Formula;
-            string newFormula = oldFormula.Replace(dialog.Formula, to.Address[true, true]);
-            from.Formula = newFormula;
+            from.Formula = RefactoringHelper.replaceSubFormula(from.Formula, dialog.Formula, to.Address[true, true]);
 
             // TODO: Provide some sort of undo functionality if possible
             // Warning: You cannot allow Excel to undo the actions of a VSTO plugin, so that path is doomed to fail :(
@@ -568,6 +558,8 @@ namespace ExcelAddIn3
              */
             // Best option would be a manual undo stack, but that still goes against user expectations:
             //      (will Ctrl+Z work?, cannot undo further than Add-in actions etc.)
+            // To hook up on Excel's undo trigger there's [Application.OnUndo](https://msdn.microsoft.com/en-us/library/office/ff194135(v=office.15).aspx)
+            //      but that still requires a VBA macro to be defined to undo the changes made by the addon.
         }
 
         #region VSTO generated code
