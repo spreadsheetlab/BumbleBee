@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using Infotron.Parsing;
 using Microsoft.Office.Interop.Excel;
 
 namespace ExcelAddIn3
@@ -27,8 +29,9 @@ namespace ExcelAddIn3
             // Change cell to contain reference to new location
             // The string replace is a bit ugly, but I couldn't think of a case where it wouldn't work
             // as such using a transformationrule seems overpowered
-            // TODO: Remove length check after formula is validated
-            string result = (subFormula.Length > 0) ? fullFormula.Replace(subFormula, targetAdress) : fullFormula;
+            // TODO: Replace by adjusting the AST instead of string replacement
+            // This has problems with spaces and probably other cases
+            string result = fullFormula.Replace(subFormula, targetAdress);
             if (!isValidFormula(result))
             {
                 throw new InvalidOperationException(String.Format("After extraction new formula is not a valid formula: {0}", result));
@@ -44,15 +47,15 @@ namespace ExcelAddIn3
 
         public static bool isValidFormula(string formula)
         {
-            // TODO: Implement
-            /*
-                FSharpTransformationRule T = new FSharpTransformationRule();
-                if (T.ParseToTree(value) == null)
-                {
-                    throw new ArgumentException("Not a valid formula.");
-                }
-                 */
-            return true;
+            ExcelFormulaParser P = new ExcelFormulaParser();
+            try
+            {
+                return !P.ParseToTree(formula).HasErrors();
+            }
+            catch (InvalidDataException)
+            {
+                return false;
+            }
         }
 
         public enum Direction
