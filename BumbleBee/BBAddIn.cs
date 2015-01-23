@@ -177,6 +177,8 @@ namespace ExcelAddIn3
         private void InitializeTransformations()
         {
             theRibbon.Preview.Text = "";
+            theRibbon.valuePreview.Text = "";
+            theRibbon.valuePreview.ShowImage = false;
             theRibbon.dropDown1.Items.Clear();
             decolorCells(transformationCells);
         }
@@ -236,25 +238,39 @@ namespace ExcelAddIn3
             {
                 FSharpTransformationRule T = AllTransformations.FirstOrDefault(x => x.Name == theRibbon.dropDown1.SelectedItem.Label);
 
-                if (T != null)
-                {
-                    Range R = ((Range)Application.Selection);
-                    string formula = RemoveFirstSymbol(((Range)R.Item[1, 1]).Formula);
-                    theRibbon.Preview.Text = T.ApplyOn(formula);
+                Excel.Range R = ((Excel.Range)Application.Selection);
+                string formula = RemoveFirstSymbol(R.Item[1, 1].Formula);
+                theRibbon.Preview.Text = T.ApplyOn(formula);
+                theRibbon.valuePreview.Text = getValue(R.Item[1, 1], theRibbon.Preview.Text);
+                theRibbon.valuePreview.ShowImage = (theRibbon.valuePreview.Text != R.Item[1, 1].Value.ToString());
 
-                    if (R.Count == 1)
+                if (R.Count == 1)
+                {
+                    foreach (Excel.Worksheet worksheet in Application.Worksheets)
                     {
-                        foreach (Excel.Worksheet worksheet in Application.Worksheets)
-                        {
-                            applyInRange(T, worksheet.UsedRange, true);
-                        }
-                    }
-                    else
-                    {
-                        applyInRange(T, Application.Selection, true);
+                        applyInRange(T, worksheet.UsedRange, true);
                     }
                 }
+                else
+                {
+                    applyInRange(T, Application.Selection, true);
+                }
             }
+        }
+
+        private String getValue(Range cell, String formula)
+        {
+            string value;
+            string currentFormula = cell.Formula;
+            cell.Formula = "=" + formula;
+            value = cell.Value.ToString();
+            cell.Formula = currentFormula;
+            return value;
+        }
+
+        private bool valueChanges(Range cell, String formula)
+        {
+            return getValue(cell, formula) != cell.Value.ToString();
         }
 
         public void ApplyTransformation(ApplyTo scope)
@@ -312,7 +328,20 @@ namespace ExcelAddIn3
                         }
                         else
                         {
-                            cell.Formula = "=" + T.ApplyOn(Formula);
+                            var transformedFormula = T.ApplyOn(Formula);
+                            if (valueChanges(cell, transformedFormula))
+                            {
+                                if(MessageBox.Show("The transformation causes the value of cell " +
+                                    cell.Worksheet.Name + ":" + cell.get_Address(false,false,Excel.XlReferenceStyle.xlA1) +
+                                    " to change from " + cell.Value + " to " + getValue(cell, transformedFormula) +
+                                    ". Do you want to continue?",
+                                    "Alert: Cell value change",
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Warning)
+                                    == DialogResult.No)
+                                    return;
+                            }
+                            cell.Formula = "=" + transformedFormula;
                             cell.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Green);
                         }
                     }

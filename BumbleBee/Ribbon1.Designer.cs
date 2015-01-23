@@ -43,6 +43,7 @@
             this.button1 = this.Factory.CreateRibbonButton();
             this.dropDown1 = this.Factory.CreateRibbonDropDown();
             this.Preview = this.Factory.CreateRibbonEditBox();
+            this.valuePreview = this.Factory.CreateRibbonEditBox();
             this.separator1 = this.Factory.CreateRibbonSeparator();
             this.button2 = this.Factory.CreateRibbonButton();
             this.button4 = this.Factory.CreateRibbonButton();
@@ -94,6 +95,7 @@
             this.groupBumbleBee.Items.Add(this.button1);
             this.groupBumbleBee.Items.Add(this.dropDown1);
             this.groupBumbleBee.Items.Add(this.Preview);
+            this.groupBumbleBee.Items.Add(this.valuePreview);
             this.groupBumbleBee.Items.Add(this.separator1);
             this.groupBumbleBee.Items.Add(this.button2);
             this.groupBumbleBee.Items.Add(this.button4);
@@ -104,8 +106,11 @@
             // 
             // button1
             // 
+            this.button1.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
+            this.button1.Image = ((System.Drawing.Image)(resources.GetObject("button1.Image")));
             this.button1.Label = "Find applicable rewrites";
             this.button1.Name = "button1";
+            this.button1.ShowImage = true;
             this.button1.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.button1_Click_1);
             // 
             // dropDown1
@@ -121,6 +126,14 @@
             this.Preview.Name = "Preview";
             this.Preview.SizeString = "helelangesuperdeluzesuperlangsformulestring";
             this.Preview.Text = null;
+            // 
+            // valuePreview
+            // 
+            this.valuePreview.Image = ((System.Drawing.Image)(resources.GetObject("valuePreview.Image")));
+            this.valuePreview.Label = "Value";
+            this.valuePreview.Name = "valuePreview";
+            this.valuePreview.SizeString = "helelangesuperdeluzesuperlangsformulestring";
+            this.valuePreview.Text = null;
             // 
             // separator1
             // 
@@ -215,6 +228,7 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonDropDown selectSmellType;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup groupInitialize;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonInitializeBumbleBee;
+        internal Microsoft.Office.Tools.Ribbon.RibbonEditBox valuePreview;
 
         #if DEBUG
             internal Microsoft.Office.Tools.Ribbon.RibbonButton Initialize;
