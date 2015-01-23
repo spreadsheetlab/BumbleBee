@@ -32,7 +32,7 @@ namespace ExcelAddIn3
             // TODO: Replace by adjusting the AST instead of string replacement
             // This has problems with spaces and probably other cases
             string result = fullFormula.Replace(subFormula, targetAdress);
-            if (!isValidFormula(result))
+            if (!isValidFormula(result) && !isValidFormula(result.Substring(1)))
             {
                 throw new InvalidOperationException(String.Format("After extraction new formula is not a valid formula: {0}", result));
             }
@@ -50,7 +50,7 @@ namespace ExcelAddIn3
             ExcelFormulaParser P = new ExcelFormulaParser();
             try
             {
-                return !P.ParseToTree(formula).HasErrors();
+                return P.ParseToTree(formula) != null;
             }
             catch (InvalidDataException)
             {
