@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Infotron.Parsing;
 using Microsoft.Office.Interop.Excel;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace ExcelAddIn3
 {
@@ -62,5 +64,77 @@ namespace ExcelAddIn3
         {
             Left, Right, Up, Down, Fixed
         }
+
+        /// <summary>
+        /// Get all direct dependents of the given cell.
+        /// </summary>
+        /// <remarks>
+        /// Contrary to Range.DirectDependents this also gives those in different sheets or workbooks.
+        /// Won't give dependents in closed workbooks
+        /// Won't give dependents of cells in protected worksheets
+        /// Won't give dependents in hidden sheets
+        /// Doesn't work with structured references because trace dependents doesn't work with them: https://social.msdn.microsoft.com/Forums/office/en-US/6fc03fe8-6805-45db-a556-35ebb3c4f396/in-vba-how-to-get-all-precedents-of-a-formula-containing-external-structure-references-ie?forum=exceldev
+        /// Based on https://colinlegg.wordpress.com/2014/01/14/vba-determine-all-precedent-cells-a-nice-example-of-recursion/.
+        /// </remarks>
+        /// <returns>All dependent cells as a collection of ranges</returns>
+        public static ICollection<Range> getAllDirectDependents(Range cell)
+        {
+            if (cell.Count > 1)
+            {
+                throw new ArgumentException("Range has more than one cell.");
+            }
+
+            String cellAddress = cell.Address[false, false, XlReferenceStyle.xlA1, true];
+
+            // Disable updating the screen so the user doesn't see our trace arrows
+            cell.Application.ScreenUpdating = false;
+
+            var dependents = new List<Range>();
+
+            cell.ShowDependents();
+            // Unfortunately we don't know beforehand how many arrows and links there are, so we'll have to loop till we encounter a non-existing one
+            bool checkNextArrowNumber = true;
+            for(int arrow = 1; checkNextArrowNumber; arrow++)
+            {
+                checkNextArrowNumber = false;
+                bool checkNextLink = true;
+                for (int link = 1; checkNextLink; link++)
+                {
+                    checkNextLink = false;
+                    try
+                    {
+                        Range dependent = cell.NavigateArrow(false, arrow, link);
+                        // This still is a valid arrow, so check the next one
+                        if (cellAddress != dependent.Address[false, false, XlReferenceStyle.xlA1, true])
+                        {
+                            checkNextArrowNumber = true;
+                            checkNextLink = true;
+                            dependents.Add(dependent);
+                        }
+                        // If you want to extend this to transitive dependencies, don't forget to do some circular reference detection
+                    }
+                    catch (COMException e)
+                    {
+                        if (e.ErrorCode == -2146827284 || e.Message == "NavigateArrow method of Range class failed") {
+                            checkNextLink = false;
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                        
+                    }
+                }
+            }
+
+            cell.ShowDependents(false);
+            cell.Worksheet.ClearArrows();
+            
+            // Resume updating the screen
+            cell.Application.ScreenUpdating = true;
+
+            return dependents;
+        }
+        
     }
 }
