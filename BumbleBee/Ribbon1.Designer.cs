@@ -53,6 +53,7 @@
             this.selectSmellType = this.Factory.CreateRibbonDropDown();
             this.groupRefactorings = this.Factory.CreateRibbonGroup();
             this.buttonExtractFormula = this.Factory.CreateRibbonButton();
+            this.buttonInlineFormula = this.Factory.CreateRibbonButton();
             this.tab1.SuspendLayout();
             this.BumbleBee.SuspendLayout();
             this.groupInitialize.SuspendLayout();
@@ -132,6 +133,7 @@
             this.valuePreview.Image = ((System.Drawing.Image)(resources.GetObject("valuePreview.Image")));
             this.valuePreview.Label = "Value";
             this.valuePreview.Name = "valuePreview";
+            this.valuePreview.ShowImage = true;
             this.valuePreview.SizeString = "helelangesuperdeluzesuperlangsformulestring";
             this.valuePreview.Text = null;
             // 
@@ -180,6 +182,7 @@
             // groupRefactorings
             // 
             this.groupRefactorings.Items.Add(this.buttonExtractFormula);
+            this.groupRefactorings.Items.Add(this.buttonInlineFormula);
             this.groupRefactorings.Label = "Refactorings";
             this.groupRefactorings.Name = "groupRefactorings";
             // 
@@ -188,6 +191,12 @@
             this.buttonExtractFormula.Label = "Extract formula";
             this.buttonExtractFormula.Name = "buttonExtractFormula";
             this.buttonExtractFormula.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.buttonExtractFormula_Click);
+            // 
+            // buttonInlineFormula
+            // 
+            this.buttonInlineFormula.Label = "Inline formula";
+            this.buttonInlineFormula.Name = "buttonInlineFormula";
+            this.buttonInlineFormula.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.buttonInlineFormula_Click);
             // 
             // Ribbon1
             // 
@@ -234,6 +243,7 @@
             internal Microsoft.Office.Tools.Ribbon.RibbonButton Initialize;
             internal Microsoft.Office.Tools.Ribbon.RibbonGroup groupRefactorings;
             internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonExtractFormula;
+            internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonInlineFormula;
         #endif
 
     }

@@ -19,6 +19,7 @@ using Infotron.PerfectXL.DataModel;
 using Microsoft.Office.Interop.Excel;
 using System.Windows.Forms;
 using ExcelAddIn3.UserDialogs;
+using FSharpEngine;
 
 namespace ExcelAddIn3
 {
@@ -591,6 +592,63 @@ namespace ExcelAddIn3
             //      but that still requires a VBA macro to be defined to undo the changes made by the addon.
         }
 
+        // TODO: Expand to ranges
+        public void inlineFormula()
+        {
+            if (Application.Selection.Count != 1) {
+                MessageBox.Show("Select a single cell");
+                return;
+            }
+
+            Range toInline = Application.Selection;
+            var toInlineFormula = toInline.HasFormula ? toInline.Formula.Substring(1) : toInline.Formula;
+            var toInlineAST = FSharpFormulaHelper.createFSharpTree(toInlineFormula);
+            var toInlineAddress = FSharpFormulaHelper.createFSharpTree(toInline.Address[false, false, XlReferenceStyle.xlA1]);
+
+            var dependencies = RefactoringHelper.getAllDirectDependents(toInline);
+
+            if (dependencies.Count == 0)
+            {
+                MessageBox.Show("Cell has no dependencies");
+                return;
+            }
+
+            var errors = new HashSet<Range>();
+            foreach (Range dependent in dependencies)
+            {
+                //Debug.Print(dependent.Address[false,false,XlReferenceStyle.xlA1,true]);
+                var dependentAST = FSharpFormulaHelper.createFSharpTree(dependent.Formula.Substring(1));
+                if (dependentAST == null)
+                {
+                    errors.Add(dependent);
+                    continue;
+                }
+                //FSharpTransform.ReplaceSubTree(toInlineAddress, toInlineFormula, dependentAST);
+                var newFormula = dependentAST.ReplaceSubTree(toInlineAddress, toInlineAST);
+                dependent.Formula = "=" + FSharpFormulaHelper.Print(newFormula);
+            }
+
+            string message = String.Format("Inlined formula '{0}' into cells:\r\n{1}",
+                toInlineFormula,
+                String.Join("\r\n",
+                    dependencies
+                    .Where(d => !errors.Contains(d))
+                    .Select(d => d.Address[false, false, XlReferenceStyle.xlA1, true]))
+                );
+            if (errors.Count > 0)
+            {
+                message += String.Format("\r\n\r\nCouldn't inline into:\r\n{0}",
+                    String.Join("\r\n", errors.Select(d => d.Address[false, false, XlReferenceStyle.xlA1, true]))
+                    );
+            }
+            else
+            {
+                toInline.Delete();
+            }
+
+            MessageBox.Show(message);
+        }
+
         #region VSTO generated code
 
         /// <summary>
@@ -608,15 +666,7 @@ namespace ExcelAddIn3
         {
             InitializeTransformations();
         }
-
-
-
-
-
-
-
-
         
-        #endregion  
+        #endregion
     }
 }

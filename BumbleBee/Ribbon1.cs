@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using Microsoft.Office.Tools.Ribbon;
 
 namespace ExcelAddIn3
@@ -62,6 +63,11 @@ namespace ExcelAddIn3
         private void buttonExtractFormula_Click(object sender, RibbonControlEventArgs e)
         {
             Globals.BBAddIn.extractFormula();
+        }
+
+        private void buttonInlineFormula_Click(object sender, RibbonControlEventArgs e)
+        {
+            Globals.BBAddIn.inlineFormula();
         }
     }
 }
