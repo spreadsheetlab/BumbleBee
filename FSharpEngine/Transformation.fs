@@ -31,23 +31,40 @@ and AllSubTotal (source:list<'a>)(n:int):list<list<list<'a>>> = AllSubLists sour
 
 //----------------------------------
 
+/// Variable for row or column
 type Var = char
+/// Variable cell address
 type VarOp = Var * Var
 
+// Concrete cell address
 type Cell = int * int
-type DCell = VarOp * VarOp
+// Dynamic/Variable cell address
+type DCell =  VarOp * VarOp
+
+/// Either a concrete or a dynamic cell
 type SuperCell = 
+/// Concrete cell address
 |C of Cell
+/// Dynamic cell address
 |D of DCell
 
 type Formula = 
+    /// A constant/Literal
     | Constant of string
+    /// Concrete or dynamic cell
     | S of SuperCell
+    /// Concrete or dynamic cell range
     | Range of SuperCell * SuperCell
+    /// Concrete function call with argument list
     | Function of string * list<Formula>
+    /// Dynamic Range
     | DRange of Var
+    /// Dynamic function argument
     | DArgument of Var
+    /// List of function arguments (?)
     | ArgumentList of list<Formula>
+
+    //member this.Contains = FSh
 
 
 type mapElement = 
@@ -80,13 +97,14 @@ let rec IsDynamic (f:Formula) =
     | S(D (i,j)) -> true
     | DRange s -> true
     | DArgument c -> true
-    | Function (s, arguments) -> List.forall(IsDynamic) arguments
+    | Function (_, arguments) | ArgumentList(arguments) -> List.forall(IsDynamic) arguments
 
 let HasMap f:bool = 
     match f with
     | Some (x) -> true 
     | None -> false
 
+/// Returns the map from an option, or an empty map on none
 let GetMap f:Map<Var,mapElement> = 
     match f with
     | Some (x) -> x 
@@ -146,7 +164,7 @@ and TryMapArgumentList (d:Formula, source: list<Formula>):maps =
 
 and CanBeAppliedon (from:Formula,source:Formula):maps = 
     match (from, source) with
-    | (S(C (i,j)), S(C(k,l))) -> Some(Map.empty)
+    | (S(C _), S(C _)) -> Some(Map.empty)
 
     | (Constant x, Constant y) -> if x=y then Some(Map.empty) else None
 
@@ -221,13 +239,20 @@ let rec MapFormula (map:Map<char,mapElement>) (t:Formula) : Formula=
 //    | _ -> null
 
 
-
-let rec ApplyOn t from source:Formula = 
-    if source = from then t else 
-    //if the function matches exactly, then return to.
-    if CanBeAppliedonRoot(from,source) then MapFormula (CanBeAppliedonMap (from,source)) t 
-       
-    else
-        (match source with //try application in arguments
-        | Function (s, list) -> Function (s, list |> List.map (ApplyOn t from))
-        | _ -> source)
+/// <summary> Apply a transformation on a formula</summary>
+/// <param name="to'">Formula transformation target</param>
+/// <param name="from">Formula transformation origin</param>
+/// <param name="source">Formula to apply transformation on</param>
+/// <returns>The transformed formula if the transformation could be applied, the unaltered formula if it could not</returns>
+let rec ApplyOn to' from source:Formula = 
+    if source = from then
+        to'
+    else 
+        //if the function matches exactly, then return to.
+        if CanBeAppliedonRoot(from,source) then
+            MapFormula (CanBeAppliedonMap (from,source)) to'
+        else
+            (match source with
+            //try application in arguments
+            | Function (s, list) -> Function (s, list |> List.map (ApplyOn to' from))
+            | _ -> source)
