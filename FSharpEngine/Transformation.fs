@@ -64,8 +64,6 @@ type Formula =
     /// List of function arguments (?)
     | ArgumentList of list<Formula>
 
-    //member this.Contains = FSh
-
 
 type mapElement = 
  | Ints of list<int>
@@ -256,3 +254,37 @@ let rec ApplyOn to' from source:Formula =
             //try application in arguments
             | Function (s, list) -> Function (s, list |> List.map (ApplyOn to' from))
             | _ -> source)
+
+type Formula with
+    member this.ApplyOn to' from = this |> ApplyOn to' from
+
+let rec Contains (search:Formula) (subject:Formula) : bool =
+    if search = subject then
+        true
+    else
+        match subject with
+            | Function (_, arguments) | ArgumentList (arguments) -> Seq.exists (Contains search) arguments
+            | _ -> false
+
+type Formula with
+    /// Check if the AST contains a certain subtree
+    member this.Contains search = this |> Contains search
+
+// You'd think this would be better done by defining `map f ast`
+// but how do you decide whether to go deeper into the tree at a Function or apply f to the function?
+let rec ReplaceSubTree search replace subject : Formula =
+    // Found it, so replace
+    if subject = search then
+        replace
+    else
+        let doArgs arguments = arguments |> List.map (ReplaceSubTree search replace)
+        match subject with
+            // Look deeper into the AST
+            | Function (s, arguments) -> Function(s, doArgs arguments)
+            | ArgumentList (arguments) -> ArgumentList(doArgs arguments)
+            // No match, do nothing
+            | _ -> subject
+
+type Formula with
+    /// Replace every occurence of an expression in an AST with another expression
+    member this.ReplaceSubTree search replace = this |> ReplaceSubTree search replace
