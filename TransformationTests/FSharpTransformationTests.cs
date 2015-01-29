@@ -54,7 +54,20 @@ namespace TransformationTests
             FSharpTransform.Formula F = T.CreateFSharpTree(Original.Root);
 
             Assert.IsNotNull(F);
-        } 
+        }
+
+        [TestMethod]
+        public void ConvertSheetReference()
+        {
+            ExcelFormulaParser P = new ExcelFormulaParser();
+            string Cell = "Sheet!A1";
+            ParseTree Original = P.ParseToTree(Cell);
+
+            FSharpTransformationRule T = new FSharpTransformationRule();
+            FSharpTransform.Formula F = T.CreateFSharpTree(Original.Root);
+
+            Assert.IsNotNull(F);
+        }
 
 
         [TestMethod]
