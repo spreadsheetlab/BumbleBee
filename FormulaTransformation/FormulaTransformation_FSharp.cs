@@ -18,11 +18,25 @@ namespace Infotron.FSharpFormulaTransformation
         public ParseTreeNode to;
         public double priority;
 
+        private readonly Lazy<FSharpTransform.Formula> fromFSharpTree;
+        private readonly Lazy<FSharpTransform.Formula> toFSharpTree;
+
+        public FSharpTransformationRule()
+        {
+            fromFSharpTree = new Lazy<FSharpTransform.Formula>(() => CreateFSharpTree(from));
+            toFSharpTree = new Lazy<FSharpTransform.Formula>(() => CreateFSharpTree(to));
+        }
+
         public int CompareTo(FSharpTransformationRule y)
         {
             return priority.CompareTo(y.priority);
         }
 
+        /// <summary>
+        /// Parse a BumbleBee or Excel formula to a parse tree
+        /// </summary>
+        /// <param name="input">Formula without =</param>
+        /// <returns>Parse tree on success or null on error.</returns>
         public ParseTreeNode ParseToTree(string input) 
         {
             TransformationRuleGrammar C = new TransformationRuleGrammar();
@@ -33,16 +47,20 @@ namespace Infotron.FSharpFormulaTransformation
             if (P.Status == ParseTreeStatus.Error)
             {
                 Debug.WriteLine("Does not parse: " + input);
+                return null;
             }
 
             return P.Root;
         }
 
-
+        /// <summary>
+        /// Change a C# parse tree to a F# parse tree
+        /// </summary>
         public FSharpTransform.Formula CreateFSharpTree(ParseTreeNode input)
         {
             var termName = input.Term.Name;
 
+            // Switch isn't possible due to GrammarNames.* not being constants
             if (termName == GrammarNames.Reference ||
                 termName == GrammarNames.Formula ||
                 termName == GrammarNames.CellorRange ||
@@ -216,7 +234,7 @@ namespace Infotron.FSharpFormulaTransformation
             ExcelFormulaParser P = new ExcelFormulaParser();
             ParseTree source = P.ParseToTree(formula);
 
-            FSharpTransform.Formula FFrom = CreateFSharpTree(from);
+            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
             FSharpTransform.Formula FSource = CreateFSharpTree(source.Root);
 
             return FSharpTransform.CanBeAppliedonBool(FFrom, FSource);
@@ -224,7 +242,7 @@ namespace Infotron.FSharpFormulaTransformation
 
         public bool CanBeAppliedonBool(ParseTreeNode source)
         {
-            FSharpTransform.Formula FFrom = CreateFSharpTree(from);
+            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
             FSharpTransform.Formula FSource = CreateFSharpTree(source);
             
             return FSharpTransform.CanBeAppliedonBool(FFrom, FSource);
@@ -232,20 +250,22 @@ namespace Infotron.FSharpFormulaTransformation
 
         public FSharpMap<char, FSharpTransform.mapElement> CanBeAppliedonMap(ParseTreeNode source)
         {
-            FSharpTransform.Formula FFrom = CreateFSharpTree(from);
+            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
             FSharpTransform.Formula FSource = CreateFSharpTree(source);
 
             return FSharpTransform.CanBeAppliedonMap(FFrom, FSource);
         }
 
-
+        /// <summary>
+        /// Apply this transformation rule on a formula
+        /// </summary>
         public string ApplyOn(string formula)
         {
             ExcelFormulaParser P = new ExcelFormulaParser();
             ParseTree source = P.ParseToTree(formula);
 
-            FSharpTransform.Formula FFrom = CreateFSharpTree(from);
-            FSharpTransform.Formula FTo = CreateFSharpTree(to);
+            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
+            FSharpTransform.Formula FTo = toFSharpTree.Value;
             FSharpTransform.Formula FSource = CreateFSharpTree(source.Root);
 
             var result = FSharpTransform.ApplyOn(FTo, FFrom, FSource);
@@ -253,10 +273,13 @@ namespace Infotron.FSharpFormulaTransformation
             return Print(result);
         }
 
+        /// <summary>
+        /// Apply this transformation rule on a parse tree
+        /// </summary>
         public FSharpTransform.Formula ApplyOn(ParseTreeNode source)
         {
-            FSharpTransform.Formula FFrom = CreateFSharpTree(from);
-            FSharpTransform.Formula FTo = CreateFSharpTree(to);
+            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
+            FSharpTransform.Formula FTo = toFSharpTree.Value;
             FSharpTransform.Formula FSource = CreateFSharpTree(source);
 
             var result = FSharpTransform.ApplyOn(FTo, FFrom, FSource);
@@ -264,6 +287,9 @@ namespace Infotron.FSharpFormulaTransformation
             return result;
         }
 
+        /// <summary>
+        /// Print a F# tree to a formula string
+        /// </summary>
         public string Print(FSharpTransform.Formula result)
         {
             if (result.IsS)
