@@ -229,13 +229,9 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup groupInitialize;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonInitializeBumbleBee;
         internal Microsoft.Office.Tools.Ribbon.RibbonEditBox valuePreview;
-
-        #if DEBUG
-            internal Microsoft.Office.Tools.Ribbon.RibbonButton Initialize;
-            internal Microsoft.Office.Tools.Ribbon.RibbonGroup groupRefactorings;
-            internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonExtractFormula;
-        #endif
-
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton Initialize;
+        internal Microsoft.Office.Tools.Ribbon.RibbonGroup groupRefactorings;
+        internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonExtractFormula;
     }
 
     partial class ThisRibbonCollection
