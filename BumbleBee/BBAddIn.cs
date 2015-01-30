@@ -149,6 +149,8 @@ namespace ExcelAddIn3
             //find last filled cells
             int Lower = 50;
 
+            AllTransformations.Clear();
+
             for (int i = 1; i <= Lower; i++)
             {
                 string From = ((Range)Sheet.Cells.Item[i, 1]).Value;
