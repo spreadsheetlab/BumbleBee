@@ -613,17 +613,36 @@ namespace ExcelAddIn3
                 return;
             }
 
-            var errors = new HashSet<Range>();
+            var errors = new Dictionary<Range, string>();
             foreach (Range dependent in dependencies)
             {
                 //Debug.Print(dependent.Address[false,false,XlReferenceStyle.xlA1,true]);
                 var dependentAST = FSharpFormulaHelper.createFSharpTree(dependent.Formula.Substring(1));
                 if (dependentAST == null)
                 {
-                    errors.Add(dependent);
+                    errors.Add(dependent, "Could not parse cell formula");
                     continue;
                 }
-                //FSharpTransform.ReplaceSubTree(toInlineAddress, toInlineFormula, dependentAST);
+                // Check if the dependent has the cell in a range
+                if (FSharpTransform.ContainsCellInRanges(toInlineAddress, dependentAST))
+                {
+                    // TODO: Handle cell in range gracefully, e.g. by altering the range
+                    errors.Add(dependent, "Cannot handle references in ranges yet");
+                    continue;
+                }
+                // Check if the dependent has the cell in a named range
+                // TODO: Do a proper check for named ranges
+                // HACK: I haven't fully figured out how to best traverse the named ranges, this propably needs additional AST.
+                // As such this check if the cell contains the formula adress and thus fails
+                // if a cell contains a reference to the cell both by adress and in a named range
+                // This check however would always be wise to have
+                // Check if the AST contains the address to inline
+                if (!dependentAST.Contains(toInlineAddress))
+                {
+                    errors.Add(dependent, "Could not find reference to cell in this dependent cell (named range?)");
+                    continue;
+                }
+                
                 var newFormula = dependentAST.ReplaceSubTree(toInlineAddress, toInlineAST);
                 dependent.Formula = "=" + FSharpFormulaHelper.Print(newFormula);
             }
@@ -632,13 +651,13 @@ namespace ExcelAddIn3
                 toInlineFormula,
                 String.Join("\r\n",
                     dependencies
-                    .Where(d => !errors.Contains(d))
+                    .Where(d => !errors.ContainsKey(d))
                     .Select(d => d.Address[false, false, XlReferenceStyle.xlA1, true]))
                 );
             if (errors.Count > 0)
             {
                 message += String.Format("\r\n\r\nCouldn't inline into:\r\n{0}",
-                    String.Join("\r\n", errors.Select(d => d.Address[false, false, XlReferenceStyle.xlA1, true]))
+                    String.Join("\r\n", from d in errors select d.Value + ": " + d.Value)
                     );
             }
             else

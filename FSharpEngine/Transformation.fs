@@ -286,3 +286,22 @@ let rec ReplaceSubTree search replace subject : Formula =
 type Formula with
     /// Replace every occurence of an expression in an AST with another expression
     member this.ReplaceSubTree search replace = this |> ReplaceSubTree search replace
+
+/// Check if a cell is part of a range
+let IsCellInRange cell range =
+    match range with
+        | Range(C(startC, startR), C(endC, endR)) -> 
+            (match cell with
+                | S(C(c,r)) -> c >= startC && c <= endC && r >= startR && r <= endR
+                | _ -> invalidArg "cell" "cell must be a concrete cell")
+        | _ -> invalidArg "range" "range must be a concrete range"
+
+let rec RangesInFormula = function
+    | Range (_,_) as r -> [r]
+    | Function (_, arguments) | ArgumentList(arguments) -> arguments |> List.collect RangesInFormula
+    | _ -> []
+
+type Formula with
+    member this.Ranges = this |> RangesInFormula
+
+let ContainsCellInRanges cell formula = formula |> RangesInFormula |> List.exists (IsCellInRange cell)
