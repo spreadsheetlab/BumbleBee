@@ -88,13 +88,11 @@ let rec IsDynamic (f:Formula) =
     match f with
     | Constant c -> false
     | S(C (i,j)) -> false
-    | Range (C(i,j),C(k,l)) -> false //this might be also solveable with a forall, should look into that 
-    | Range (D(i,j),C(k,l)) -> true
-    | Range (C(i,j),D(k,l)) -> true
-    | Range (D(i,j),D(k,l)) -> true
+    | Range (a, b) -> IsDynamic (S a) || IsDynamic (S b)
     | S(D (i,j)) -> true
     | DRange s -> true
     | DArgument c -> true
+    // This seems wrong, wouldn't a formula be dynamic if any of the arguments were dynamic? Instead of all arguments?
     | Function (_, arguments) | ArgumentList(arguments) -> List.forall(IsDynamic) arguments
 
 let HasMap f:bool = 
