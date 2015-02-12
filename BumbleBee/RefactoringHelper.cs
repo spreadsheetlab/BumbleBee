@@ -135,6 +135,34 @@ namespace ExcelAddIn3
 
             return dependents;
         }
+
+        /// <summary>
+        /// Check if a cell is in the supplied named ranges
+        /// </summary>
+        public static bool isInNamedRanges(Range cell, IEnumerable<String> ranges, out string which)
+        {
+            foreach (string range in ranges)
+            {
+                var excelRange = cell.Worksheet.Range[range];
+                var intersect = cell.Application.Intersect(cell, excelRange);
+                if (intersect != null && intersect.Count > 0)
+                {
+                    which = range;
+                    return true;
+                }
+            }
+            which = "";
+            return false;
+        }
+
+        /// <summary>
+        /// Check if a cell is in the supplied named ranges
+        /// </summary>
+        public static bool isInNamedRanges(Range cell, IEnumerable<String> ranges)
+        {
+            string v;
+            return isInNamedRanges(cell, ranges, out v);
+        }
         
     }
 }

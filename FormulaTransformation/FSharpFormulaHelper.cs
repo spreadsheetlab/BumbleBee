@@ -78,6 +78,10 @@ namespace Infotron.FSharpFormulaTransformation
                 FSharpList<FSharpTransform.Formula> Farguments = ListModule.OfSeq(arguments);
                 return FSharpTransform.makeFormula(FunctionName, Farguments);
             }
+            else if (termName == GrammarNames.NamedRange)
+            {
+                return FSharpTransform.makeNamedRange(input.ChildNodes.First().Token.Text);
+            }
             else if (termName == GrammarNames.Range)
             {
                 if (input.ChildNodes.First().Term.ToString() == GrammarNames.DynamicRange)
@@ -155,7 +159,7 @@ namespace Infotron.FSharpFormulaTransformation
                 return FSharpTransform.makeDArgument(y);
             }
 
-            return null;
+            throw new ArgumentException("Can't convert this node type", "input");
         }
 
         private static FSharpTransform.SuperCell GetDynamicCell(ParseTreeNode input)

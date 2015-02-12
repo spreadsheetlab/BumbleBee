@@ -603,13 +603,19 @@ namespace ExcelAddIn3
             Range toInline = Application.Selection;
             var toInlineFormula = toInline.HasFormula ? toInline.Formula.Substring(1) : toInline.Formula;
             var toInlineAST = FSharpFormulaHelper.createFSharpTree(toInlineFormula);
-            var toInlineAddress = FSharpFormulaHelper.createFSharpTree(toInline.Address[false, false, XlReferenceStyle.xlA1]);
+            var toInlineAddress = FSharpFormulaHelper.createFSharpTree(toInline.Address[false, false]);
 
             var dependencies = RefactoringHelper.getAllDirectDependents(toInline);
 
             if (dependencies.Count == 0)
             {
                 MessageBox.Show("Cell has no dependencies");
+                return;
+            }
+
+            if (toInlineAST == null)
+            {
+                MessageBox.Show("Couldn't parse to-inline cell");
                 return;
             }
 
@@ -631,15 +637,10 @@ namespace ExcelAddIn3
                     continue;
                 }
                 // Check if the dependent has the cell in a named range
-                // TODO: Do a proper check for named ranges
-                // HACK: I haven't fully figured out how to best traverse the named ranges, this propably needs additional AST.
-                // As such this check if the cell contains the formula adress and thus fails
-                // if a cell contains a reference to the cell both by adress and in a named range
-                // This check however would always be wise to have
-                // Check if the AST contains the address to inline
-                if (!dependentAST.Contains(toInlineAddress))
+                string range;
+                if (RefactoringHelper.isInNamedRanges(toInline, dependentAST.NamedRanges, out range))
                 {
-                    errors.Add(dependent, "Could not find reference to cell in this dependent cell (named range?)");
+                    errors.Add(dependent, String.Format("Cannot handle named ranges, refers to cell in named range '{0}'.", range));
                     continue;
                 }
                 
@@ -647,17 +648,21 @@ namespace ExcelAddIn3
                 dependent.Formula = "=" + FSharpFormulaHelper.Print(newFormula);
             }
 
-            string message = String.Format("Inlined formula '{0}' into cells:\r\n{1}",
-                toInlineFormula,
-                String.Join("\r\n",
-                    dependencies
-                    .Where(d => !errors.ContainsKey(d))
-                    .Select(d => d.Address[false, false, XlReferenceStyle.xlA1, true]))
-                );
+            string message = "";
+            if (!dependencies.All(d => errors.ContainsKey(d)))
+            {
+                message += String.Format("Inlined formula '{0}' into cells:\r\n{1}",
+                    toInlineFormula,
+                    String.Join("\r\n",
+                        dependencies
+                            .Where(d => !errors.ContainsKey(d))
+                            .Select(d => d.Address[false, false, XlReferenceStyle.xlA1, true]))
+                    );
+            }
             if (errors.Count > 0)
             {
                 message += String.Format("\r\n\r\nCouldn't inline into:\r\n{0}",
-                    String.Join("\r\n", from d in errors select d.Value + ": " + d.Value)
+                    String.Join("\r\n", from d in errors select d.Key.Address[false, false, XlReferenceStyle.xlA1, true] + ": " + d.Value)
                     );
             }
             else

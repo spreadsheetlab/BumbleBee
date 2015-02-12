@@ -55,6 +55,8 @@ type Formula =
     | S of SuperCell
     /// Concrete or dynamic cell range
     | Range of SuperCell * SuperCell
+    /// Named range
+    | NamedRange of string
     /// Concrete function call with argument list
     | Function of string * list<Formula>
     /// Dynamic Range
@@ -82,6 +84,7 @@ let makeDCell i j = D(i,j)
 let makeDRange r = DRange r
 let makeDArgument c = DArgument c
 let makeRange (x,y) = Range (x,y)
+let makeNamedRange name = NamedRange (name)
 let makeFormula (s:string) (x:list<Formula>) = Function (s,x)
 
 let rec IsDynamic (f:Formula) = 
@@ -94,6 +97,7 @@ let rec IsDynamic (f:Formula) =
     | DArgument c -> true
     // This seems wrong, wouldn't a formula be dynamic if any of the arguments were dynamic? Instead of all arguments?
     | Function (_, arguments) | ArgumentList(arguments) -> List.forall(IsDynamic) arguments
+    | NamedRange (_) -> false
 
 let HasMap f:bool = 
     match f with
@@ -256,13 +260,10 @@ let rec ApplyOn to' from source:Formula =
 type Formula with
     member this.ApplyOn to' from = this |> ApplyOn to' from
 
-let rec Contains (search:Formula) (subject:Formula) : bool =
-    if search = subject then
-        true
-    else
-        match subject with
-            | Function (_, arguments) | ArgumentList (arguments) -> Seq.exists (Contains search) arguments
-            | _ -> false
+let rec Contains (search:Formula) = function
+       | subject when search = subject -> true
+       | Function (_, arguments) | ArgumentList (arguments) -> Seq.exists (Contains search) arguments
+       | _ -> false
 
 type Formula with
     /// Check if the AST contains a certain subtree
@@ -270,18 +271,16 @@ type Formula with
 
 // You'd think this would be better done by defining `map f ast`
 // but how do you decide whether to go deeper into the tree at a Function or apply f to the function?
-let rec ReplaceSubTree search replace subject : Formula =
-    // Found it, so replace
-    if subject = search then
-        replace
-    else
-        let doArgs arguments = arguments |> List.map (ReplaceSubTree search replace)
-        match subject with
-            // Look deeper into the AST
-            | Function (s, arguments) -> Function(s, doArgs arguments)
-            | ArgumentList (arguments) -> ArgumentList(doArgs arguments)
-            // No match, do nothing
-            | _ -> subject
+let rec ReplaceSubTree search replace =
+    let doArgs arguments = arguments |> List.map (ReplaceSubTree search replace)
+    function
+        // Found it, so replace
+        | subject when subject = search -> replace
+        // Look deeper into the AST
+        | Function (s, arguments) -> Function(s, doArgs arguments)
+        | ArgumentList (arguments) -> ArgumentList(doArgs arguments)
+        // No match, do nothing
+        | subject -> subject
 
 type Formula with
     /// Replace every occurence of an expression in an AST with another expression
@@ -296,12 +295,30 @@ let IsCellInRange cell range =
                 | _ -> invalidArg "cell" "cell must be a concrete cell")
         | _ -> invalidArg "range" "range must be a concrete range"
 
-let rec RangesInFormula = function
-    | Range (_,_) as r -> [r]
-    | Function (_, arguments) | ArgumentList(arguments) -> arguments |> List.collect RangesInFormula
-    | _ -> []
+let rec Leaves = function
+    | Function (_, arguments) | ArgumentList (arguments) -> arguments |> List.collect Leaves
+    | l -> [l]
 
 type Formula with
-    member this.Ranges = this |> RangesInFormula
+    member this.Leaves = this |> Leaves
 
-let ContainsCellInRanges cell formula = formula |> RangesInFormula |> List.exists (IsCellInRange cell)
+(*
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Formula =
+    let private Leaves = lazy(this |> Leaves)
+*)
+
+let Ranges (formula:Formula) =
+    formula.Leaves |>
+    List.filter (function | Range(_,_) -> true | _ -> false) 
+let NamedRanges (formula:Formula) =
+    formula.Leaves
+    |> List.map (function | NamedRange(r) -> r | _ -> "")
+    |> List.filter (fun x -> x <> "")
+ 
+type Formula with
+    member this.Ranges = this |> Ranges
+    member this.NamedRanges = this |> NamedRanges
+
+/// Test if a cell is contained in any concrete range
+let ContainsCellInRanges cell (formula:Formula) = formula.Ranges |> List.exists (IsCellInRange cell)
