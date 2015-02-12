@@ -150,6 +150,8 @@ namespace ExcelAddIn3
             //find last filled cells
             int Lower = 50;
 
+            AllTransformations.Clear();
+
             for (int i = 1; i <= Lower; i++)
             {
                 string From = ((Range)Sheet.Cells.Item[i, 1]).Value;
@@ -684,12 +686,26 @@ namespace ExcelAddIn3
             this.Startup += new EventHandler(ThisAddIn_Startup);
             Application.WorkbookOpen += new Excel.AppEvents_WorkbookOpenEventHandler(Application_WorkbookOpen);
             Application.SheetSelectionChange += new Excel.AppEvents_SheetSelectionChangeEventHandler(Application_SheetSelectionChange);
+            Application.WorkbookAfterSave += new Excel.AppEvents_WorkbookAfterSaveEventHandler(Application_WorkbookAfterSave);
         }
 
         void Application_SheetSelectionChange(object Sh, Excel.Range Target)
         {
             InitializeTransformations();
         }
+
+        void Application_WorkbookAfterSave(Microsoft.Office.Interop.Excel.Workbook w, bool success)
+        {
+            InitializeBB();
+        }
+
+
+
+
+
+
+
+
         
         #endregion
     }
