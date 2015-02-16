@@ -252,13 +252,6 @@ namespace Infotron.FSharpFormulaTransformation
                 }
             }
 
-            if (result.IsRange) {
-                var y = (FSharpTransform.Formula.Range)result;
-                //string CellName1 = new Location(y.Item1.Item1, y.Item1.Item2).ToString();
-                //string CellName2 = new Location(y.Item2.Item1, y.Item2.Item2).ToString();
-                //return CellName1 + ":" + CellName2;
-            }
-
             if (result.IsConstant) {
                 var y = (FSharpTransform.Formula.Constant)result;
                 return y.Item;
