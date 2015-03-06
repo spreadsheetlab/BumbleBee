@@ -370,12 +370,13 @@ namespace ExcelAddIn3
             AnalysisController = new AnalysisController
             {
                 Worker = new BackgroundWorker { WorkerReportsProgress = true },
-                AnalysisMaxRows = 10000,
-                Filename = Application.ActiveWorkbook.FullName,
-                WriteColoredXLSFile = false
+                // Seems like option has been removed by fecf71ad4d72daf5ad7f843a95ee00e07de6a25b and doesn't seem to have a replacement, maybe Preprocessors?
+                //AnalysisMaxRows = 10000,
+                Filename = Application.ActiveWorkbook.FullName
             };
 
-            AnalysisController.RunAnalysis(true, false);
+            // Createriskmaps option was removed by 025a29a1b845d41850a0e4fd3ae2271d62933e55 and no direct replacement in same commmit
+            AnalysisController.RunAnalysis();
 
             if (!AnalysisController.Spreadsheet.AnalysisSucceeded)
             {

@@ -45,9 +45,13 @@ namespace Infotron.FSharpFormulaTransformation
         {
             var termName = input.Term.Name;
 
-            // Switch isn't possible due to GrammarNames.* not being constants
-            if (termName == GrammarNames.Reference ||
-                termName == GrammarNames.Formula ||
+            // Switch isn't possible due to GrammarNames.* not being constants (yet)
+            if (termName == GrammarNames.Reference)
+            {
+                // Skip prefix
+                return CreateFSharpTree(input.ChildNodes[input.ChildNodes.Count==1?0:1]);
+            }
+            else if (termName == GrammarNames.Formula ||
                 termName == GrammarNames.CellorRange ||
                 termName == GrammarNames.Argument)
             {
