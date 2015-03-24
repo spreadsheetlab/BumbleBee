@@ -18,8 +18,12 @@ using System.Drawing;
 using Infotron.PerfectXL.DataModel;
 using Microsoft.Office.Interop.Excel;
 using System.Windows.Forms;
-using ExcelAddIn3.UserDialogs;
+using ExcelAddIn3.Refactorings;
+using ExcelAddIn3.TaskPanes;
+using Infotron.Parsing;
 using FSharpEngine;
+using Irony.Parsing;
+using Microsoft.Office.Tools;
 
 namespace ExcelAddIn3
 {
@@ -502,9 +506,21 @@ namespace ExcelAddIn3
             }
         }
 
+        // TODO: Better place / dynamic location, preferably inside source control
+        private const string BumbleBeeDebugStartupfile = @"C:\bumblebee_startup.xlsx";
+
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
+            #if DEBUG
+            if (System.IO.File.Exists(BumbleBeeDebugStartupfile))
+            {
+                Application.Workbooks.Open(BumbleBeeDebugStartupfile);
+            }
+            #endif
 
+            extractFormulaTp = new TaksPaneWPFContainer<ExtractFormulaTaskPane>(new ExtractFormulaTaskPane(Application));
+            extractFormulaCtp = CustomTaskPanes.Add(extractFormulaTp, "Extract formula");
+            //extractFormulaCTP.Visible = true;
         }
 
         void Application_WorkbookOpen(Excel.Workbook Wb)
@@ -512,168 +528,42 @@ namespace ExcelAddIn3
             InitializeBB();
         }
 
-        // TODO: Expand to ranges
+        private TaksPaneWPFContainer<ExtractFormulaTaskPane> extractFormulaTp;
+        private CustomTaskPane extractFormulaCtp;
+
         public void extractFormula()
         {
-            if (Application.Selection.Count != 1)
-            {
-                MessageBox.Show("Select a single cell");
-                return;
-            }
-
-            Range from = Application.Selection;
-
-            if (!from.HasFormula)
-            {
-                MessageBox.Show("Cell does not contain formula");
-                return;
-            }
-
-            var dialog = new ExtractFormulaDialog(from);
-            dialog.ShowDialog();
-
-            if (dialog.DialogResult != true)
-            {
-                return;
-            }
-
-            RefactoringHelper.Direction dir = dialog.Direction;
-            
-            if (dir == RefactoringHelper.Direction.Left && from.Column == 1)
-            {
-                // Create a new column to the left
-                from.EntireColumn.Insert(XlInsertShiftDirection.xlShiftToRight, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
-            } else if (dir == RefactoringHelper.Direction.Up && from.Row == 0)
-            {
-                from.EntireRow.Insert(XlInsertShiftDirection.xlShiftDown, XlInsertFormatOrigin.xlFormatFromRightOrBelow);
-            }
-
-            Range to = null;
-            switch (dir)
-            {
-                case RefactoringHelper.Direction.Down:
-                    to = from.Offset[1, 0];
-                    break;
-                case RefactoringHelper.Direction.Up:
-                    to = from.Offset[-1, 0];
-                    break;
-                case RefactoringHelper.Direction.Left:
-                    to = from.Offset[0, -1];
-                    break;
-                case RefactoringHelper.Direction.Right:
-                    to = from.Offset[0, 1];
-                    break;
-                case RefactoringHelper.Direction.Fixed:
-                    to = Application.ActiveSheet.Cells.Range[dialog.CellAddress];
-                    break;
-            }
-
-            if (to == null)
-            {
-                Log("Extract formula target was null");
-                return;
-            }
-
-            // Change cell formula at target location to new subformula
-            to.Formula = "=" + dialog.Formula;
-
-            from.Formula = RefactoringHelper.replaceSubFormula(from.Formula, dialog.Formula, to.Address[true, true]);
-
-            // TODO: Provide some sort of undo functionality if possible
-            // Warning: You cannot allow Excel to undo the actions of a VSTO plugin, so that path is doomed to fail :(
-            // Quote from page 176 from "Visual Studio Tools for Office 2007" by E. Carter:
-            /* Undo in Excel
-             *      Excel has an Undo method that can be used to undo the last few actions
-             *      taken by the user. However, Excel does not support undoing actions taken
-             *      by your code. As soon as your code touches the object model, Excel clears
-             *      the undo history and it does not add any of the actions your code performs
-             *      to the undo history.
-             */
-            // Best option would be a manual undo stack, but that still goes against user expectations:
-            //      (will Ctrl+Z work?, cannot undo further than Add-in actions etc.)
-            // To hook up on Excel's undo trigger there's [Application.OnUndo](https://msdn.microsoft.com/en-us/library/office/ff194135(v=office.15).aspx)
-            //      but that still requires a VBA macro to be defined to undo the changes made by the addon.
+            extractFormulaTp.Child.init(Application.Selection);
+            extractFormulaCtp.Visible = true;
         }
 
-        // TODO: Expand to ranges
         public void inlineFormula()
         {
-            if (Application.Selection.Count != 1) {
-                MessageBox.Show("Select a single cell");
+            Range selected = Application.Selection;
+            if (selected == null || selected.Count == 0)
+            {
+                MessageBox.Show("Select cell(s) to inline");
                 return;
             }
-
-            Range toInline = Application.Selection;
-            var toInlineFormula = toInline.HasFormula ? toInline.Formula.Substring(1) : toInline.Formula;
-            var toInlineAST = FSharpFormulaHelper.createFSharpTree(toInlineFormula);
-            var toInlineAddress = FSharpFormulaHelper.createFSharpTree(toInline.Address[false, false]);
-
-            var dependencies = RefactoringHelper.getAllDirectDependents(toInline);
-
-            if (dependencies.Count == 0)
+            try
             {
-                MessageBox.Show("Cell has no dependencies");
-                return;
+                InlineFormula.Refactor(Application.Selection);
+                MessageBox.Show("Succesfully inlined selected cells");
             }
-
-            if (toInlineAST == null)
+            catch (AggregateException e)
             {
-                MessageBox.Show("Couldn't parse to-inline cell");
-                return;
+                MessageBox.Show(
+                    String.Format(
+                        "Not all cells could be succefully inlined.\n{0}",
+                        String.Join("\n\n",e.InnerExceptions.Select(ie => ie.Message))
+                    )
+               );
             }
-
-            var errors = new Dictionary<Range, string>();
-            foreach (Range dependent in dependencies)
+            catch (Exception e)
             {
-                //Debug.Print(dependent.Address[false,false,XlReferenceStyle.xlA1,true]);
-                var dependentAST = FSharpFormulaHelper.createFSharpTree(dependent.Formula.Substring(1));
-                if (dependentAST == null)
-                {
-                    errors.Add(dependent, "Could not parse cell formula");
-                    continue;
-                }
-                // Check if the dependent has the cell in a range
-                if (FSharpTransform.ContainsCellInRanges(toInlineAddress, dependentAST))
-                {
-                    // TODO: Handle cell in range gracefully, e.g. by altering the range
-                    errors.Add(dependent, "Cannot handle references in ranges yet");
-                    continue;
-                }
-                // Check if the dependent has the cell in a named range
-                string range;
-                if (RefactoringHelper.isInNamedRanges(toInline, dependentAST.NamedRanges, out range))
-                {
-                    errors.Add(dependent, String.Format("Cannot handle named ranges, refers to cell in named range '{0}'.", range));
-                    continue;
-                }
-                
-                var newFormula = dependentAST.ReplaceSubTree(toInlineAddress, toInlineAST);
-                dependent.Formula = "=" + FSharpFormulaHelper.Print(newFormula);
+                MessageBox.Show("Unknown error");
+                throw;
             }
-
-            string message = "";
-            if (!dependencies.All(d => errors.ContainsKey(d)))
-            {
-                message += String.Format("Inlined formula '{0}' into cells:\r\n{1}",
-                    toInlineFormula,
-                    String.Join("\r\n",
-                        dependencies
-                            .Where(d => !errors.ContainsKey(d))
-                            .Select(d => d.Address[false, false, XlReferenceStyle.xlA1, true]))
-                    );
-            }
-            if (errors.Count > 0)
-            {
-                message += String.Format("\r\n\r\nCouldn't inline into:\r\n{0}",
-                    String.Join("\r\n", from d in errors select d.Key.Address[false, false, XlReferenceStyle.xlA1, true] + ": " + d.Value)
-                    );
-            }
-            else
-            {
-                toInline.Delete();
-            }
-
-            MessageBox.Show(message);
         }
 
         #region VSTO generated code

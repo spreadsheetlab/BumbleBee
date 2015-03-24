@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infotron.BumbleBee", "BumbleBee\Infotron.BumbleBee.csproj", "{23E01965-F3AC-40A7-98EF-A3BD71FE7448}"
 EndProject
@@ -15,31 +15,49 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransformationTests", "Tran
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Build|Any CPU = Build|Any CPU
 		Debug|Any CPU = Debug|Any CPU
+		Production|Any CPU = Production|Any CPU
 		Release|Any CPU = Release|Any CPU
 		Staging|Any CPU = Staging|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Build|Any CPU.ActiveCfg = Release|Any CPU
+		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Build|Any CPU.Build.0 = Release|Any CPU
 		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Production|Any CPU.ActiveCfg = Release|Any CPU
+		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Production|Any CPU.Build.0 = Release|Any CPU
 		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Release|Any CPU.Build.0 = Release|Any CPU
 		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Staging|Any CPU.ActiveCfg = Release|Any CPU
 		{23E01965-F3AC-40A7-98EF-A3BD71FE7448}.Staging|Any CPU.Build.0 = Release|Any CPU
+		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Build|Any CPU.ActiveCfg = Staging|Any CPU
+		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Build|Any CPU.Build.0 = Staging|Any CPU
 		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Production|Any CPU.ActiveCfg = Staging|Any CPU
+		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Production|Any CPU.Build.0 = Staging|Any CPU
 		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{AC6C0BED-7B04-454A-882D-639CA46C90D2}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Build|Any CPU.ActiveCfg = Staging|Any CPU
+		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Build|Any CPU.Build.0 = Staging|Any CPU
 		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Production|Any CPU.ActiveCfg = Staging|Any CPU
+		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Production|Any CPU.Build.0 = Staging|Any CPU
 		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{EE2A8F36-5403-49C0-8A80-E1F33513435B}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Build|Any CPU.ActiveCfg = Staging|Any CPU
+		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Build|Any CPU.Build.0 = Staging|Any CPU
 		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Production|Any CPU.ActiveCfg = Staging|Any CPU
+		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Production|Any CPU.Build.0 = Staging|Any CPU
 		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Release|Any CPU.Build.0 = Release|Any CPU
 		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
