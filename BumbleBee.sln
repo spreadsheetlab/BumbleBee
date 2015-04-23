@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infotron.FormulaTransformat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransformationTests", "TransformationTests\TransformationTests.csproj", "{51EC8734-01F8-4312-B595-0EE5D8EEFB28}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefactoringTests", "RefactoringTests\RefactoringTests.csproj", "{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Build|Any CPU = Build|Any CPU
@@ -62,11 +64,22 @@ Global
 		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Release|Any CPU.Build.0 = Release|Any CPU
 		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{51EC8734-01F8-4312-B595-0EE5D8EEFB28}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Build|Any CPU.ActiveCfg = Release|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Build|Any CPU.Build.0 = Release|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Production|Any CPU.ActiveCfg = Release|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Production|Any CPU.Build.0 = Release|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Staging|Any CPU.ActiveCfg = Release|Any CPU
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9}.Staging|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{51EC8734-01F8-4312-B595-0EE5D8EEFB28} = {D26A6279-76E1-4FAE-AEF9-29D99B2B7D54}
+		{A726053E-1795-4AE1-ABEE-2FD9198B4AC9} = {D26A6279-76E1-4FAE-AEF9-29D99B2B7D54}
 	EndGlobalSection
 EndGlobal

@@ -507,20 +507,23 @@ namespace ExcelAddIn3
         }
 
         // TODO: Better place / dynamic location, preferably inside source control
-        private const string BumbleBeeDebugStartupfile = @"C:\bumblebee_startup.xlsx";
+        private readonly string[] BumbleBeeDebugStartupfiles =
+        {
+            @"C:\bumblebee\startup.xlsx",
+            @"C:\bumblebee\startup.xlsm"
+        };
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             #if DEBUG
-            if (System.IO.File.Exists(BumbleBeeDebugStartupfile))
+            foreach (var startupfile in BumbleBeeDebugStartupfiles.Where(System.IO.File.Exists))
             {
-                Application.Workbooks.Open(BumbleBeeDebugStartupfile);
+                Application.Workbooks.Open(startupfile);
             }
             #endif
 
             extractFormulaTp = new TaksPaneWPFContainer<ExtractFormulaTaskPane>(new ExtractFormulaTaskPane(Application));
             extractFormulaCtp = CustomTaskPanes.Add(extractFormulaTp, "Extract formula");
-            //extractFormulaCTP.Visible = true;
         }
 
         void Application_WorkbookOpen(Excel.Workbook Wb)

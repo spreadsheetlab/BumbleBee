@@ -35,7 +35,7 @@ namespace ExcelAddIn3.Refactorings
         }
 
         /// <param name="cell">A single cell</param>
-        public static ContextNode Parse(this Range cell, Context Ctx = null)
+        public static ContextNode Parse(Range cell, Context Ctx = null)
         {
             if (cell.Count != 1) throw new ArgumentException("Must be a single cell", "cell");
             string f = cell.Formula;

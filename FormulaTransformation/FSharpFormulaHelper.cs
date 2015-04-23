@@ -64,9 +64,9 @@ namespace Infotron.FSharpFormulaTransformation
 
                 foreach (var Argument in input.ChildNodes)
                 {
-                    if (ExcelFormulaParser.IsOperation(Argument) || (Argument.Term.Name == GrammarNames.Function))
+                    if (ExcelFormulaParser.IsFunction(Argument) || (Argument.Term.Name == GrammarNames.Function))
                     {
-                        FunctionName += Argument.ChildNodes.First().Token.ValueString;
+                        FunctionName += ExcelFormulaParser.GetFunction(Argument);
                     }
                     else
                     {
