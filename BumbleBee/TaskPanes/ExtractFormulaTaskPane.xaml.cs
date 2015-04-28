@@ -19,6 +19,7 @@ using Microsoft.Office.Interop.Excel;
 using System.IO;
 using System.Runtime.InteropServices;
 using ExcelAddIn3.Refactorings;
+using ExcelAddIn3.Refactorings.Util;
 
 namespace ExcelAddIn3.TaskPanes
 {

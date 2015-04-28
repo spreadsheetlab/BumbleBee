@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ExcelAddIn3.Refactorings.Util;
 using Microsoft.Office.Interop.Excel;
 
 namespace ExcelAddIn3.Refactorings
@@ -19,7 +20,7 @@ namespace ExcelAddIn3.Refactorings
             throw new NotImplementedException();
         }
 
-        private const RangeType appliesTo = RangeType.Range;
+        private const RangeType appliesTo = RangeType.AppliesToAnyRange;
         public RangeType AppliesTo { get { return appliesTo; } }
 
         /// <summary>

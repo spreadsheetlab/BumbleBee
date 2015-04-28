@@ -290,17 +290,17 @@
     can be found.
   -->
   <ItemGroup>
-    <Compile Include="ExcelInformation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Refactorings\AgregrateToConditionalAggregrate.cs" />
     <Compile Include="Refactorings\ExtractFormula.cs" />
     <Compile Include="Refactorings\GroupReferences.cs" />
-    <Compile Include="Refactorings\Helper.cs" />
+    <Compile Include="Refactorings\Util\Helper.cs" />
     <Compile Include="Refactorings\InlineFormula.cs" />
     <Compile Include="Refactorings\IRefactoring.cs" />
     <Compile Include="Refactorings\ReplaceAwkwardFormula.cs" />
+    <Compile Include="Refactorings\Util\RangeType.cs" />
     <Compile Include="TaskPanes\ExtractFormulaTaskPane.xaml.cs">
       <DependentUpon>ExtractFormulaTaskPane.xaml</DependentUpon>
     </Compile>

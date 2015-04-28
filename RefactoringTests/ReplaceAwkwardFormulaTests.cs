@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ExcelAddIn3.Refactorings;
+using ExcelAddIn3.Refactorings.Util;
 using Infotron.Parsing;
 
 namespace RefactoringTests

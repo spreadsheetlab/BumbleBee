@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ExcelAddIn3.Refactorings.Util;
 using Infotron.Parsing;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
