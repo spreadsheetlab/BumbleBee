@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,33 +16,57 @@ namespace ExcelAddIn3.Refactorings
     /// </summary>
     public class ReplaceAwkwardFormula : NodeRefactoring
     {
+        // This class has no state, singleton instance
         public static readonly ReplaceAwkwardFormula Instance = new ReplaceAwkwardFormula();
 
         public override ParseTreeNode Refactor(ParseTreeNode applyto)
         {
-            if(!CanRefactor(applyto)) throw new ArgumentException("Cannot refactor this formula", "applyto");
+            ParseTreeNode current;
+            string opToRefactor;
+
+            if (!CanRefactor(applyto, out current, out opToRefactor))
+            {
+                throw new ArgumentException("Cannot refactor this formula", "applyto");
+            }
+
+            // Gather the arguments to the aggregate function in this list
             var arguments = new List<ParseTreeNode>();
 
-            var current = P.SkipToRevelantChildNodes(applyto);
-            string opToRefactor = P.GetFunction(current);
-
+            // Traverse the tree while we encounter the op
             while (P.MatchFunction(current, opToRefactor))
             {
                 // All the ops we transform are left associative so right part of the tree can never be other ops.
                 // Left part might be more ops which we can also put into the aggregate
                 arguments.Add(current.ChildNodes[2]);
-                current = current.ChildNodes[0];
+                current = P.SkipToRevelantChildNodes(current.ChildNodes[0]);
             }
             // Last left node does not contain any other ops, add it to the arguments
             arguments.Add(current);
-            // construct the new formula with a SUM
-            return Helper.Parse(String.Format("SUM({0})", String.Join(",", arguments.Select(P.Instance.Print))));
+            // Arguments were pushed in reverse order
+            arguments.Reverse();
+
+            
+            // construct the new formula with the aggregate
+            var newformula = String.Format("{0}({1})", functions[opToRefactor], String.Join(",", arguments.Select(P.Instance.Print)));
+            return newformula.Parse();
         }
 
         public override bool CanRefactor(ParseTreeNode applyto)
         {
-            applyto = P.SkipToRevelantChildNodes(applyto);
-            return P.IsFunction(applyto) && functions.ContainsKey(P.GetFunction(applyto));
+            ParseTreeNode relevant;
+            string opToRefactor;
+            return CanRefactor(applyto, out relevant, out opToRefactor);
+        }
+
+        private static bool CanRefactor(ParseTreeNode applyto, out ParseTreeNode relevant, out string opToRefactor)
+        {
+            relevant = P.SkipToRevelantChildNodes(applyto);
+            opToRefactor = "";
+
+            if (!P.IsBinaryOperation(relevant)) return false;
+            opToRefactor = P.GetFunction(relevant);
+
+            return functions.ContainsKey(opToRefactor);
         }
 
         private static readonly IReadOnlyDictionary<string, string> functions = new Dictionary<string, string>()
