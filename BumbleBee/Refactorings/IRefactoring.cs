@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ExcelAddIn3.Refactorings.Util;
 using Infotron.Parsing;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
+
 
 namespace ExcelAddIn3.Refactorings
 {
@@ -28,35 +30,7 @@ namespace ExcelAddIn3.Refactorings
         RangeType AppliesTo { get; }
     }
 
-    [Flags]
-    public enum RangeType
-    {
-        Cell                    = 1 << 1,
-        MultipleCells           = 1 << 2,
-        Disconnected            = 1 << 3,
-        SingleRow               = 1 << 4,
-        SingleColumn            = 1 << 5,
-        MultipleSheets          = 1 << 6,
-        
 
-        ConnectedRange = Cell | MultipleCells | SingleRow | SingleColumn,
-        Range = ConnectedRange | Disconnected,
-        RangeInMultipleSheets = Range | MultipleSheets,
-    }
-
-    public static class RangeTypeMethods
-    {
-        public static RangeType RangeType(this Range r)
-        {
-            // TODO
-            return 0;
-        }
-
-        public static bool Fits(this RangeType t, Range r)
-        {
-            return (RangeType(r) & t) != 0;
-        }
-    }
 
     public interface INodeRefactoring : IRangeRefactoring
     {
@@ -85,7 +59,7 @@ namespace ExcelAddIn3.Refactorings
             return AppliesTo.Fits(applyto) && CanRefactor(Helper.Parse(applyto,Context.Empty).Node);
         }
 
-        public RangeType AppliesTo { get { return RangeType.Cell; } }
+        public RangeType AppliesTo { get { return RangeType.SingleCell; } }
         public abstract ParseTreeNode Refactor(ParseTreeNode applyto);
         public abstract bool CanRefactor(ParseTreeNode applyto);
     }
