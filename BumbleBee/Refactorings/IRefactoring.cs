@@ -16,7 +16,7 @@ namespace ExcelAddIn3.Refactorings
         /// </summary>
         /// <exception cref="ArgumentException">If this refactoring cannot apply to the given range</exception>
         void Refactor(Range applyto);
-
+        
         /// <summary>
         /// Test whether this refactoring can be applied to a range
         /// </summary>

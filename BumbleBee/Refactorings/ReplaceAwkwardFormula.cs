@@ -11,11 +11,11 @@ namespace ExcelAddIn3.Refactorings
 {
     /// <summary>
     /// Transforms a sequence of identical operators to the corresponding aggregate function.
-    /// + to SUM, * to PRODUCT, & to CONCATENATE
+    /// + to SUM, * to PRODUCT, & to CONCATENATE.
     /// </summary>
-    public class OperatorSequenceToAggregate : NodeRefactoring
+    public class ReplaceAwkwardFormula : NodeRefactoring
     {
-        public static readonly OperatorSequenceToAggregate Instance = new OperatorSequenceToAggregate();
+        public static readonly ReplaceAwkwardFormula Instance = new ReplaceAwkwardFormula();
 
         public override ParseTreeNode Refactor(ParseTreeNode applyto)
         {
