@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Text.RegularExpressions;
 using Infotron.Parsing;
 using Irony.Parsing;
@@ -10,19 +12,37 @@ namespace ExcelAddIn3.Refactorings.Util
 {
     public static class Helper
     {
-        private static readonly ExcelFormulaParser parser = new ExcelFormulaParser();
-
         public static Range TopLeft(this Range r)
         {
             return (Range)r.Item[1, 1];
         }
 
-        public static ParseTreeNode Parse(this string formula)
+        public static bool IsEmpty(this Range r)
         {
-            return parser.ParseToTree(formula).Root;
+            return r.Count == 0;
         }
 
-        public static ContextNode Parse(this string formula, Context Ctx)
+        private static bool UseParseCache { get { return true; }}
+
+        // TODO: Replace with R1C1 cache and move references depending on memory usage and speed
+        private static readonly ObjectCache formulaCache = UseParseCache ? new MemoryCache("FormulaCache") : null;
+
+        public static ParseTreeNode Parse(this string formula)
+        {
+            if (UseParseCache && formulaCache.Contains(formula))
+            {
+                return (ParseTreeNode) formulaCache.Get(formula);
+            }
+
+            var parsed = ExcelFormulaParser.Instance.ParseToTree(formula).Root;
+            if (UseParseCache)
+            {
+                formulaCache.Add(formula, parsed, new CacheItemPolicy());
+            }
+            return parsed;
+        }
+
+        public static ContextNode ParseCtx(this string formula, Context Ctx)
         {
             return new ContextNode(Ctx, Parse(formula));
         }
@@ -34,7 +54,12 @@ namespace ExcelAddIn3.Refactorings.Util
         }
 
         /// <param name="cell">A single cell</param>
-        public static ContextNode Parse(Range cell, Context Ctx = null)
+        public static ContextNode ParseCtx(Range cell, Context Ctx = null)
+        {
+            return new ContextNode(Ctx ?? CreateContext(cell), Parse(cell));
+        }
+
+        public static ParseTreeNode Parse(Range cell)
         {
             if (cell.Count != 1) throw new ArgumentException("Must be a single cell", "cell");
             string f = cell.Formula;
@@ -42,8 +67,8 @@ namespace ExcelAddIn3.Refactorings.Util
                 cell.HasFormula ? f.Substring(1)
                 : isNumeric(f) ? f
                 // Parse as text, replace single " with double "" to avoid breaking the escape sequence
-                : String.Format("\"{0}\"", f.Replace("\"","\"\""));
-            return Parse(toParse, Ctx ?? CreateContext(cell));
+                : String.Format("\"{0}\"", f.Replace("\"", "\"\""));
+            return Parse(toParse);
         }
 
         public static Context CreateContext(this Range cell)

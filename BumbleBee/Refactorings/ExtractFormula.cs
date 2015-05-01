@@ -7,6 +7,7 @@ using Microsoft.Office.Interop.Excel;
 
 namespace ExcelAddIn3.Refactorings
 {
+    // TODO: Refactor to implement the new interfaces
     public static class ExtractFormula
     {
         public class Direction : Tuple<int, int>
@@ -91,7 +92,7 @@ namespace ExcelAddIn3.Refactorings
             {
                 prototype = uniqueR1C1Group.First();
 
-                var parsed = Helper.Parse(prototype);
+                var parsed = Helper.ParseCtx(prototype);
                 var targetAddr = parsed.Ctx.Parse(prototype.Offset[dir.RowOffset, dir.ColOffset].Address[false, false]);
 
                 prototype.Formula = "=" + parsed.Replace(subformula, targetAddr).Print();
@@ -125,7 +126,7 @@ namespace ExcelAddIn3.Refactorings
             foreach (var uniqueR1C1Group in applyto.Cells.Cast<Range>().GroupBy(c => c.FormulaR1C1))
             {
                 var prototype = uniqueR1C1Group.First();
-                var parsed = Helper.Parse(prototype);
+                var parsed = Helper.ParseCtx(prototype);
 
                 prototype.Formula = "=" + parsed.Replace(subformula, targetAddr).Print();
                 var r1c1 = prototype.FormulaR1C1;
@@ -156,7 +157,7 @@ namespace ExcelAddIn3.Refactorings
         {
             var which = applyto.Cells.Cast<Range>()
                 .GroupBy(c => (string) c.FormulaR1C1)
-                .Select(group => new {parse = Helper.Parse(@group.First(), subformula.Ctx), example = @group.First()})
+                .Select(group => new {parse = Helper.ParseCtx(@group.First(), subformula.Ctx), example = @group.First()})
                 .FirstOrDefault(t => !t.parse.Contains(subformula));
             return which != null ? which.example : null;
         }

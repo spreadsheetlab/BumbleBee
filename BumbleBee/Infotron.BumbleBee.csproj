@@ -243,6 +243,7 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
@@ -299,8 +300,8 @@
     <Compile Include="Refactorings\Util\Helper.cs" />
     <Compile Include="Refactorings\InlineFormula.cs" />
     <Compile Include="Refactorings\IRefactoring.cs" />
-    <Compile Include="Refactorings\ReplaceAwkwardFormula.cs" />
-    <Compile Include="Refactorings\Util\RangeType.cs" />
+    <Compile Include="Refactorings\OpToAggregate.cs" />
+    <Compile Include="Refactorings\Util\RangeShape.cs" />
     <Compile Include="TaskPanes\ExtractFormulaTaskPane.xaml.cs">
       <DependentUpon>ExtractFormulaTaskPane.xaml</DependentUpon>
     </Compile>

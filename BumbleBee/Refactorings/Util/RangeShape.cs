@@ -9,17 +9,19 @@ using System.Threading.Tasks;
 
 namespace ExcelAddIn3.Refactorings.Util
 {
-
-
-    public static class RangeType
+    /// <summary>
+    /// Class that determines if the shape of a range has certain features, e.g. if it is nonempty or a single column.
+    /// This can be used by refactorings, for example a refactoring might only be applicable to a single cell or connected range
+    /// </summary>
+    public static class RangeShape
     {
         private const Flags Empty = 0;
-        private const Flags Cell = Flags.SingleCell | Flags.Connected | Flags.SingleColumn | Flags.SingleRow;
+        private const Flags Cell = Flags.SingleCell | Flags.Connected | Flags.SingleColumn | Flags.SingleRow | Flags.NonEmpty;
 
-        public static RangeType.Flags Type(this Range r)
+        public static Flags Shape(this Range r)
         {
             // Check range is not null or empty
-            if (r == null || r.Count == 0)
+            if (r == null || r.IsEmpty())
             {
                 return Empty;
             }
@@ -31,7 +33,7 @@ namespace ExcelAddIn3.Refactorings.Util
             }
 
             // We're sure we have multiple cells now
-            Flags rt = Flags.MultipleCells;
+            Flags rt = Flags.MultipleCells | Flags.NonEmpty;
 
             // Check if the range consists of multiple disconnected ranges
             if (r.Areas.Count == 1)
@@ -39,20 +41,21 @@ namespace ExcelAddIn3.Refactorings.Util
                 rt |= Flags.Connected;
             }
 
-
-            int firstrow = (r.Item[1, 1] as Range).Row;
+            // Check if all cells are in a single row
+            int firstrow = ((Range) r.Item[1, 1]).Row;
             if(r.Cells.Cast<Range>().All(x => x.Row == firstrow)) {
                 rt |= Flags.SingleRow;
             }
 
-            int firstcolumn = (r.Item[1, 1] as Range).Column;
+            // Check if all cells are in a single column
+            int firstcolumn = ((Range) r.Item[1, 1]).Column;
             if(r.Cells.Cast<Range>().All(x => x.Column == firstcolumn)) {
                 rt |= Flags.SingleColumn;
             }
 
             return rt;
 
-            /** // Faster iterative version if performance becomes a problem
+            /** // Faster iterative version (probably) if performance becomes a problem
             bool singlerow = true;
             bool singlecol = true;
             // Determine if cells are in a single column/row
@@ -72,9 +75,14 @@ namespace ExcelAddIn3.Refactorings.Util
             */
         }
 
-        public static bool Fits(this RangeType t, Range r)
+        public static bool FitsShape(this Range r, Flags shape)
         {
-            return (RangeType(r) & t) != 0;
+            return (r.Shape() & shape) == shape;
+        }
+
+        public static bool Fits(this Flags shape, Range r)
+        {
+            return r.FitsShape(shape);
         }
 
         [Flags]
@@ -84,7 +92,8 @@ namespace ExcelAddIn3.Refactorings.Util
             MultipleCells = 1 << 2,
             Connected = 1 << 3,
             SingleRow = 1 << 4,
-            SingleColumn = 1 << 5
+            SingleColumn = 1 << 5,
+            NonEmpty = 1 << 6,
         }
     }
 }

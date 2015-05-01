@@ -15,10 +15,10 @@ namespace ExcelAddIn3.Refactorings
     /// Transforms a sequence of identical operators to the corresponding aggregate function.
     /// + to SUM, * to PRODUCT, & to CONCATENATE.
     /// </summary>
-    public class ReplaceAwkwardFormula : NodeRefactoring
+    public class OpToAggregate : FormulaRefactoring
     {
         // This class has no state, singleton instance
-        public static readonly ReplaceAwkwardFormula Instance = new ReplaceAwkwardFormula();
+        public static readonly OpToAggregate Instance = new OpToAggregate();
 
         public override ParseTreeNode Refactor(ParseTreeNode applyto)
         {

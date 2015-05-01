@@ -23,16 +23,25 @@ namespace ExcelAddIn3.Refactorings
         /// Test whether this refactoring can be applied to a range
         /// </summary>
         bool CanRefactor(Range applyto);
+    }
+
+    public abstract class RangeRefactoring : IRangeRefactoring
+    {
+        public abstract void Refactor(Range applyto);
+
+        public virtual bool CanRefactor(Range applyto)
+        {
+            return applyto.FitsShape(AppliesTo);
+        }
 
         /// <summary>
         /// What type of targets a refactoring can Apply to
         /// </summary>
-        RangeType AppliesTo { get; }
+        protected abstract RangeShape.Flags AppliesTo { get; }
     }
 
 
-
-    public interface INodeRefactoring : IRangeRefactoring
+    public interface IFormulaRefactoring : IRangeRefactoring
     {
         /// <summary>
         /// Apply this refactoring to a specific ContextNode
@@ -45,21 +54,21 @@ namespace ExcelAddIn3.Refactorings
         bool CanRefactor(ParseTreeNode applyto);
     }
 
-    // Default implementation for INodeRefactoring methods
-    public abstract class NodeRefactoring : INodeRefactoring
+    // Default implementation for IFormulaRefactoring methods
+    public abstract class FormulaRefactoring : RangeRefactoring, IFormulaRefactoring
     {
-        public virtual void Refactor(Range applyto)
+        public override void Refactor(Range applyto)
         {
-            var subject = (Range)applyto.Item[1, 1];
-            subject.Formula = "=" + Refactor(Helper.Parse(applyto,Context.Empty).Node).Print();
+            applyto.Formula = "=" + Refactor(Helper.Parse(applyto)).Print();
         }
 
-        public virtual bool CanRefactor(Range applyto)
+        public override bool CanRefactor(Range applyto)
         {
-            return AppliesTo.Fits(applyto) && CanRefactor(Helper.Parse(applyto,Context.Empty).Node);
+            return applyto.FitsShape(AppliesTo) && CanRefactor(Helper.Parse(applyto));
         }
 
-        public RangeType AppliesTo { get { return RangeType.SingleCell; } }
+        protected override RangeShape.Flags AppliesTo { get { return RangeShape.Flags.SingleCell; } }
+
         public abstract ParseTreeNode Refactor(ParseTreeNode applyto);
         public abstract bool CanRefactor(ParseTreeNode applyto);
     }

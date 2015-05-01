@@ -8,6 +8,7 @@ using Infotron.Parsing;
 
 namespace ExcelAddIn3.Refactorings
 {
+    // TODO: Refactor to implement the new interfaces
     public static class InlineFormula
     {
 
@@ -47,9 +48,9 @@ namespace ExcelAddIn3.Refactorings
                 throw new InvalidOperationException(String.Format("Cell {0} has no dependencies", toInline.SheetAndAddress()));
             }
 
-            var toInlineAST = Helper.Parse(toInline, toInlineCtx);
+            var toInlineAST = Helper.ParseCtx(toInline, toInlineCtx);
             //MessageBox.Show(toInlineFormula);
-            var toInlineAddress = Helper.Parse(toInline.Address[false, false], toInlineCtx);
+            var toInlineAddress = Helper.ParseCtx(toInline.Address[false, false], toInlineCtx);
 
             var errors = new List<Exception>();
             foreach (Range dependent in dependencies)
@@ -57,7 +58,7 @@ namespace ExcelAddIn3.Refactorings
                 try
                 {
                     //Debug.Print(dependent.Address[false,false,XlReferenceStyle.xlA1,true]);
-                    var dependentAST = Helper.Parse(dependent);
+                    var dependentAST = Helper.ParseCtx(dependent);
                     if (dependentAST.Node == null)
                     {
                         throw new InvalidOperationException(String.Format("Could not parse formula of {0}",

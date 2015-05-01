@@ -10,33 +10,32 @@ using Microsoft.Office.Interop.Excel;
 
 namespace ExcelAddIn3.Refactorings
 {
-    class AgregrateToConditionalAggregrate : IRangeRefactoring
+    class AgregrateToConditionalAggregrate : RangeRefactoring
     {
-        public void Refactor(Range applyto)
+        public override void Refactor(Range applyto)
         {
             throw new NotImplementedException();
         }
 
-        public bool CanRefactor(Range applyto)
+        public override bool CanRefactor(Range applyto)
         {
-            if (!AppliesTo.Fits(applyto))
-            {
-                return false;
-            }
+            // Shape check
+            if (!base.CanRefactor(applyto)) return false;
+            
             // Look for +'s/SUM's, COUNT and AVERAGE
             // TODO: Add +
-            ParseTreeNode ptn = Helper.Parse(applyto.Formula);
+            var ptn = Helper.Parse(applyto);
             // Get the count functions
             var candidates = ExcelFormulaParser.AllNodes(ptn)
-                .Where(n => n.Is(GrammarNames.FunctionCall))
+                .Where(ExcelFormulaParser.IsFunction)
                 // Only sums
                 .Where(n =>
                 {
-                    switch (n.ChildNodes.First().ChildNodes.First().Token.ValueString)
+                    switch (ExcelFormulaParser.GetFunction(n))
                     {
-                        case "AVERAGE(":
-                        case "COUNT(":
-                        case "SUM(":
+                        case "AVERAGE":
+                        case "COUNT":
+                        case "SUM":
                             return true;
                         default:
                             return false;
@@ -54,9 +53,10 @@ namespace ExcelAddIn3.Refactorings
             });
         }
 
-        public RangeType AppliesTo
+        protected override RangeShape.Flags AppliesTo
         {
-            get { return RangeType.SingleColumn | RangeType.SingleRow; }
+            // TODO: Extend to multiple cells on the same row & column
+            get { return RangeShape.Flags.SingleCell; } //  | RangeShape.Flags.SingleColumn RangeShape.Flags.SingleRow
         }
 
         /// <summary>Tests whether this </summary>

@@ -7,9 +7,9 @@ using Infotron.Parsing;
 namespace RefactoringTests
 {
     [TestClass]
-    public class ReplaceAwkwardFormulaTests
+    public class OpToAggregateTests
     {
-        private readonly INodeRefactoring testee = new ReplaceAwkwardFormula();
+        private readonly IFormulaRefactoring testee = new OpToAggregate();
 
         [TestMethod]
         public void TestPlus01()

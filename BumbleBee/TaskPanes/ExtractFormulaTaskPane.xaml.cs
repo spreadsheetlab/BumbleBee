@@ -73,7 +73,7 @@ namespace ExcelAddIn3.TaskPanes
 
             try
             {
-                orFormula = Helper.Parse(topleft);
+                orFormula = Helper.ParseCtx(topleft);
             }
             catch (InvalidDataException)
             {
