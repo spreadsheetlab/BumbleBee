@@ -44,7 +44,7 @@ namespace ExcelAddIn3.Refactorings
     public interface IFormulaRefactoring : IRangeRefactoring
     {
         /// <summary>
-        /// Apply this refactoring to a specific ContextNode
+        /// Apply this refactoring to a specific ContextNode. Allowed to change the original ParseTreeNode.
         /// </summary>
         ParseTreeNode Refactor(ParseTreeNode applyto);
 
@@ -59,12 +59,20 @@ namespace ExcelAddIn3.Refactorings
     {
         public override void Refactor(Range applyto)
         {
-            applyto.Formula = "=" + Refactor(Helper.Parse(applyto)).Print();
+            //applyto.Formula = "=" + Refactor(Helper.Parse(applyto)).Print();
+            foreach (Range cell in applyto.Cells)
+            {
+                var parsed = Helper.Parse(cell);
+                if (CanRefactor(parsed))
+                {
+                    cell.Formula = "=" + Refactor(parsed).Print();
+                }
+            }
         }
 
         public override bool CanRefactor(Range applyto)
         {
-            return applyto.FitsShape(AppliesTo) && CanRefactor(Helper.Parse(applyto));
+            return applyto.FitsShape(AppliesTo) && applyto.Cells.Cast<Range>().Any(cell => CanRefactor(Helper.Parse(cell)));
         }
 
         protected override RangeShape.Flags AppliesTo { get { return RangeShape.Flags.SingleCell; } }
