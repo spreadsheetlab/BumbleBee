@@ -524,6 +524,9 @@ namespace ExcelAddIn3
 
             extractFormulaTp = new TaksPaneWPFContainer<ExtractFormulaTaskPane>(new ExtractFormulaTaskPane(Application));
             extractFormulaCtp = CustomTaskPanes.Add(extractFormulaTp, "Extract formula");
+
+            RefactoringContextMenuInitialize();
+            this.Application.SheetBeforeRightClick += new AppEvents_SheetBeforeRightClickEventHandler(RefactorMenuEnableRelevant);
         }
 
         void Application_WorkbookOpen(Excel.Workbook Wb)
@@ -566,6 +569,64 @@ namespace ExcelAddIn3
             {
                 MessageBox.Show("Unknown error");
                 throw;
+            }
+        }
+
+        private class RefactorMenuItem
+        {
+            public string MenuText { get; set; }
+            public IRangeRefactoring Refactoring { get; set; }
+            public bool NewGroup { get; set; }
+            public Office.CommandBarButton Button { get; set; }
+        }
+
+        private readonly List<RefactorMenuItem> contextMenuRefactorings = new List<RefactorMenuItem>
+        {
+            new RefactorMenuItem {MenuText="+ to SUM",Refactoring=new OpToAggregate()},
+            new RefactorMenuItem {MenuText="SUM to SUMIF", Refactoring=new GroupReferences()},
+            new RefactorMenuItem {MenuText="Group References", Refactoring=new GroupReferences(), NewGroup = true},
+            new RefactorMenuItem {MenuText="Inline Formula", Refactoring=new NotImplementedRefactoring(), NewGroup = true},
+            new RefactorMenuItem {MenuText="Extract Formula", Refactoring=new NotImplementedRefactoring()},
+        };
+
+        private void RefactoringContextMenuInitialize()
+        {
+            const string tag = "REFACTORMENU";
+            var cellcontextmenu = this.Application.CommandBars["Cell"];
+
+            // Check if menu already defined
+            if (cellcontextmenu.FindControl(Office.MsoControlType.msoControlPopup, 0, tag) != null) return;
+
+            var menu = (Office.CommandBarPopup)cellcontextmenu.Controls.Add(
+                Type:Office.MsoControlType.msoControlPopup,
+                Before: cellcontextmenu.Controls.Count,
+                Temporary: true);
+            menu.Caption = "Refactor";
+            menu.BeginGroup = true;
+            menu.Tag = tag;
+
+            foreach (var menuitem in contextMenuRefactorings)
+            {
+                var control = (Office.CommandBarButton) menu.Controls.Add(Type: Office.MsoControlType.msoControlButton, Temporary:true);
+                control.Caption = menuitem.MenuText;
+                control.BeginGroup = menuitem.NewGroup;
+                // Disable by default, only enable when relevant
+                control.Enabled = false;
+                menuitem.Button = control;
+                // Create a copy of the iterator item because we're going to use it within a closure
+                var refactoring = menuitem.Refactoring;
+                control.Click += (Office.CommandBarButton ctrl, ref bool cancelDefault) =>
+                {
+                    refactoring.Refactor(Application.Selection);
+                };
+            }
+        }
+
+        private void RefactorMenuEnableRelevant(object Sh, Range Target, ref bool Cancel)
+        {
+            foreach (var item in contextMenuRefactorings)
+            {
+                item.Button.Enabled = item.Refactoring.CanRefactor(Target);
             }
         }
 

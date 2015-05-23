@@ -241,9 +241,11 @@
       <HintPath>..\packages\Microsoft.Bcl.Immutable.1.0.34\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
@@ -297,6 +299,7 @@
     <Compile Include="Refactorings\AgregrateToConditionalAggregrate.cs" />
     <Compile Include="Refactorings\ExtractFormula.cs" />
     <Compile Include="Refactorings\GroupReferences.cs" />
+    <Compile Include="Refactorings\NotImplementedRefactoring.cs" />
     <Compile Include="Refactorings\Util\Helper.cs" />
     <Compile Include="Refactorings\InlineFormula.cs" />
     <Compile Include="Refactorings\IRefactoring.cs" />
@@ -328,6 +331,7 @@
       <DependentUpon>TaksPaneWPFContainer.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="App.config" />
+    <None Include="bumblebee.manifest" />
     <None Include="Infotron.BumbleBee_1_TemporaryKey.pfx" />
     <None Include="Infotron.BumbleBee_TemporaryKey.pfx" />
     <None Include="NLog.config" />
@@ -381,6 +385,8 @@
     <Content Include="Reporting\icons\link.png" />
     <Content Include="Reporting\icons\refresh.png" />
     <Content Include="Reporting\icons\wired.png" />
+    <None Include="Resources\animals-bumble_bee.ico" />
+    <None Include="Resources\bumblebee.ico" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="TaskPanes\ExtractFormulaTaskPane.xaml">
@@ -394,6 +400,7 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
+  <PropertyGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- Include additional build rules for an Office application add-in. -->
   <!-- This section defines VSTO properties that describe the host-changeable project properties. -->
