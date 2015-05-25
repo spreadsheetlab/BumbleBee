@@ -553,7 +553,7 @@ namespace ExcelAddIn3
             }
             try
             {
-                InlineFormula.Refactor(Application.Selection);
+                new InlineFormula().Refactor(Application.Selection);
                 MessageBox.Show("Succesfully inlined selected cells");
             }
             catch (AggregateException e)
@@ -585,7 +585,7 @@ namespace ExcelAddIn3
             new RefactorMenuItem {MenuText="+ to SUM",Refactoring=new OpToAggregate()},
             new RefactorMenuItem {MenuText="SUM to SUMIF", Refactoring=new GroupReferences()},
             new RefactorMenuItem {MenuText="Group References", Refactoring=new GroupReferences(), NewGroup = true},
-            new RefactorMenuItem {MenuText="Inline Formula", Refactoring=new NotImplementedRefactoring(), NewGroup = true},
+            new RefactorMenuItem {MenuText="Inline Formula", Refactoring=new InlineFormula(), NewGroup = true},
             new RefactorMenuItem {MenuText="Extract Formula", Refactoring=new NotImplementedRefactoring()},
         };
 
@@ -617,7 +617,24 @@ namespace ExcelAddIn3
                 var refactoring = menuitem.Refactoring;
                 control.Click += (Office.CommandBarButton ctrl, ref bool cancelDefault) =>
                 {
-                    refactoring.Refactor(Application.Selection);
+                    try
+                    {
+                        refactoring.Refactor(Application.Selection);
+                    }
+                    catch (AggregateException e)
+                    {
+                        MessageBox.Show(
+                            String.Format(
+                                "Errors:\n{0}",
+                                String.Join("\n\n", e.InnerExceptions.Select(ie => ie.Message))
+                            )
+                       );
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show(String.Format("Error: {0}", e.Message));
+                        throw;
+                    }
                 };
             }
         }

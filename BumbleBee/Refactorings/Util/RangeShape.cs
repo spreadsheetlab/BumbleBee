@@ -16,7 +16,7 @@ namespace ExcelAddIn3.Refactorings.Util
     public static class RangeShape
     {
         private const Flags Empty = 0;
-        private const Flags Cell = Flags.SingleCell | Flags.Connected | Flags.SingleColumn | Flags.SingleRow | Flags.NonEmpty;
+        private const Flags Cell = Flags.SingleCell | Flags.Connected | Flags.SingleColumn | Flags.SingleRow;
 
         public static Flags Shape(this Range r)
         {
@@ -26,14 +26,19 @@ namespace ExcelAddIn3.Refactorings.Util
                 return Empty;
             }
 
+            Flags rt = 0;
+
+            // Check if there are nonempty cells
+            rt |= HasContent(r);
+
             // Check if the range is a single cell
             if (r.Count == 1)
             {
-                return Cell;
+                return rt | Cell;
             }
 
             // We're sure we have multiple cells now
-            Flags rt = Flags.MultipleCells | Flags.NonEmpty;
+            rt |= Flags.MultipleCells;
 
             // Check if the range consists of multiple disconnected ranges
             if (r.Areas.Count == 1)
@@ -83,6 +88,11 @@ namespace ExcelAddIn3.Refactorings.Util
         public static bool Fits(this Flags shape, Range r)
         {
             return r.FitsShape(shape);
+        }
+
+        private static Flags HasContent(Range r)
+        {
+            return r.Cells.Cast<Range>().Any(cell => cell.Value2 != null && cell.Value2.ToString().Trim() != "") ? Flags.NonEmpty : 0;
         }
 
         [Flags]

@@ -8,15 +8,14 @@ using Infotron.Parsing;
 
 namespace ExcelAddIn3.Refactorings
 {
-    // TODO: Refactor to implement the new interfaces
-    public static class InlineFormula
+    public class InlineFormula : RangeRefactoring
     {
 
         /// <summary>
         /// Inline all cells in a range into their dependents
         /// </summary>
         /// <exception cref="AggregateException">If any cells could not be inlined, with as innerexceptions the individual errors.</exception>
-        public static void Refactor(Range toInline)
+        public override void Refactor(Range toInline)
         {
             var errors = new List<Exception>();
             foreach (var area in toInline.Areas.Cast<Range>())
@@ -26,7 +25,10 @@ namespace ExcelAddIn3.Refactorings
                 {
                     try
                     {
-                        RefactorSingle(cell, ctx);
+                        if (cell.FitsShape(RangeShape.Flags.NonEmpty))
+                        {
+                            RefactorSingle(cell, ctx);
+                        }
                     }
                     catch (Exception e)
                     {
@@ -40,9 +42,14 @@ namespace ExcelAddIn3.Refactorings
             }
         }
 
+        protected override RangeShape.Flags AppliesTo
+        {
+            get { return RangeShape.Flags.NonEmpty; }
+        }
+
         private static void RefactorSingle(Range toInline, Context toInlineCtx)
         {
-            var dependencies = getAllDirectDependents(toInline);
+            var dependencies = GetAllDirectDependents(toInline);
             if (dependencies.Count == 0)
             {
                 throw new InvalidOperationException(String.Format("Cell {0} has no dependencies", toInline.SheetAndAddress()));
@@ -80,7 +87,7 @@ namespace ExcelAddIn3.Refactorings
                     var nrs = dependentAST.NamedRanges
                         .Select(nr => toInline.Application.Names.Find(nr))
                         .Where(nr => nr != null);
-                    if (isInNamedRanges(toInline, nrs, out range))
+                    if (IsInNamedRanges(toInline, nrs, out range))
                     {
                         throw new InvalidOperationException(
                             String.Format("{1} refers to cell in named range '{0}'.", range,
@@ -128,7 +135,7 @@ namespace ExcelAddIn3.Refactorings
         /// Based on https://colinlegg.wordpress.com/2014/01/14/vba-determine-all-precedent-cells-a-nice-example-of-recursion/.
         /// </remarks>
         /// <returns>All dependent cells as a collection of ranges</returns>
-        private static ICollection<Range> getAllDirectDependents(Range cell)
+        private static ICollection<Range> GetAllDirectDependents(Range cell)
         {
             if (cell.Count > 1)
             {
@@ -190,7 +197,7 @@ namespace ExcelAddIn3.Refactorings
         /// <summary>
         /// Check if a cell is in the supplied named ranges
         /// </summary>
-        private static bool isInNamedRanges(Range cell, IEnumerable<Name> names, out string which)
+        private static bool IsInNamedRanges(Range cell, IEnumerable<Name> names, out string which)
         {
             var intersecting =
                 names.FirstOrDefault(name =>
@@ -205,10 +212,10 @@ namespace ExcelAddIn3.Refactorings
         /// <summary>
         /// Check if a cell is in the supplied named ranges
         /// </summary>
-        private static bool isInNamedRanges(Range cell, IEnumerable<Name> names)
+        private static bool IsInNamedRanges(Range cell, IEnumerable<Name> names)
         {
             string v;
-            return isInNamedRanges(cell, names, out v);
+            return IsInNamedRanges(cell, names, out v);
         }
     }
 }
