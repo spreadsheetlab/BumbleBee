@@ -76,5 +76,7 @@ namespace ExcelAddIn3.Refactorings
             {GrammarNames.OpMultiplication, "PRODUCT"},
             {GrammarNames.OpConcatenation, "CONCATENATE"}
         };
+
+        protected override RangeShape.Flags AppliesTo { get { return RangeShape.Flags.NonEmpty; } }
     }
 }
