@@ -75,7 +75,7 @@ namespace ExcelAddIn3.Refactorings
             return applyto.FitsShape(AppliesTo) && applyto.Cells.Cast<Range>().Any(cell => CanRefactor(Helper.Parse(cell)));
         }
 
-        protected override RangeShape.Flags AppliesTo { get { return RangeShape.Flags.SingleCell; } }
+        protected override RangeShape.Flags AppliesTo { get { return RangeShape.Flags.NonEmpty; } }
 
         public abstract ParseTreeNode Refactor(ParseTreeNode applyto);
         public abstract bool CanRefactor(ParseTreeNode applyto);
