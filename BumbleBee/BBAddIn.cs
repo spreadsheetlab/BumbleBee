@@ -633,7 +633,6 @@ namespace ExcelAddIn3
                     catch (Exception e)
                     {
                         MessageBox.Show(String.Format("Error: {0}", e.Message));
-                        throw;
                     }
                 };
             }

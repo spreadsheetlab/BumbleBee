@@ -129,6 +129,30 @@ namespace RefactoringTests
             var range = ws.Range[String.Join((string)excel.International[XlApplicationInternational.xlListSeparator], ranges)];
             Assert.AreEqual(String.Join(",", ranges), range.Address[false,false]);
         }
+
+        [TestMethod]
+        public void TestArrayAsArgument()
+        {
+            test("SUM((A1,A2,A3))", "SUM((A1:A3))");
+        }
+
+        [TestMethod]
+        public void TestArrayAsArgument2()
+        {
+            test("SUM((A1,A2,A3),1)", "SUM((A1:A3),1)");
+        }
+
+        [TestMethod]
+        public void TestOtherFunction()
+        {
+            test("SMALL((A1,A2,A3),1)", "SMALL((A1:A3),1)");
+        }
+
+        [TestMethod]
+        public void TestEveryFunctionArrayAsArgument()
+        {
+            test("BLAH((A1,A2,A3),1)", "BLAH((A1:A3),1)");
+        }
         
 
         private void test(string ungrouped, string grouped)
@@ -138,7 +162,9 @@ namespace RefactoringTests
             Assert.IsTrue(testee.CanRefactor(ungroupedP), "Should be able to refactor '{0}' but GroupReferences reported it cannot", ungrouped);
 
             var refactored = testee.Refactor(ungroupedP);
-            Assert.AreEqual(Context.Empty.Parse(grouped), Context.Empty.ProvideContext(refactored));
+            var expected = Context.Empty.Parse(grouped);
+            var actual = Context.Empty.Parse(refactored.Print());
+            Assert.AreEqual(expected, actual);
         }
     }
 }

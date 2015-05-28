@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ExcelAddIn3.Refactorings.Util;
@@ -65,7 +66,15 @@ namespace ExcelAddIn3.Refactorings
                 var parsed = Helper.Parse(cell);
                 if (CanRefactor(parsed))
                 {
-                    cell.Formula = "=" + Refactor(parsed).Print();
+                    var refactored = Refactor(parsed);
+                    try
+                    {
+                        cell.Formula = "=" + refactored.Print();
+                    }
+                    catch (COMException e)
+                    {
+                        throw new InvalidOperationException(String.Format("Refactoring produced invalid formula '{0}'", refactored.Print()), e);
+                    }
                 }
             }
         }

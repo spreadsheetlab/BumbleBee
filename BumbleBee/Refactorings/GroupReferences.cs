@@ -43,35 +43,38 @@ namespace ExcelAddIn3.Refactorings
 
             foreach (var function in targetFunctions)
             {
-                var target = function;
-                if(!varargsFunctions.Contains(ExcelFormulaParser.GetFunction(function)))
+                var arguments = function.ChildNodes[1].ChildNodes;
+
+                // Group ArrayAsArgument arguments
+                foreach (var arg in arguments.Where(arg => arg.Is(GrammarNames.ArrayAsArgument)))
                 {
-                    // Not a varags functions, select only the arrayAsArgument argument
-                    target = function.ChildNodes.First(x => x.Is(GrammarNames.ArrayAsArgument));
+                    GroupReferenceList(arg.ChildNodes[0].ChildNodes);
                 }
 
-                var functionname = target.ChildNodes
-                    .First(x => x.Is(GrammarNames.Function));
-
-                var arguments = target.ChildNodes
-                    .First(x => x.Is(GrammarNames.Arguments))
-                    .ChildNodes;
-
-                var togroup = arguments
-                    .Where(NodeCanBeGrouped);
-                var toNotGroup = arguments
-                    .Where(x => !NodeCanBeGrouped(x));
-
-                var grouped = GroupTheReferences(togroup)
-                    .OrderBy(x=>x) // Sort references alphabetically
-                    .Select(x => x.Parse()); // Make them parsetreenodes again
-
-                function.ChildNodes[1].ChildNodes.Clear();
-                function.ChildNodes[1].ChildNodes.AddRange(toNotGroup);
-                function.ChildNodes[1].ChildNodes.AddRange(grouped);
+                // If this is a varags function group all arguments
+                if (varargsFunctions.Contains(ExcelFormulaParser.GetFunction(function)))
+                {
+                    GroupReferenceList(arguments);
+                }
             }
 
             return applyto;
+        }
+
+        private void GroupReferenceList(ParseTreeNodeList arguments)
+        {
+            var togroup = arguments
+                    .Where(NodeCanBeGrouped);
+            var toNotGroup = arguments
+                .Where(x => !NodeCanBeGrouped(x));
+
+            var grouped = GroupTheReferences(togroup)
+                .OrderBy(x => x) // Sort references alphabetically
+                .Select(x => x.Parse()); // Make them parsetreenodes again
+
+            var newargs = toNotGroup.Concat(grouped).ToList();
+            arguments.Clear();
+            arguments.AddRange(newargs);
         }
 
         public override bool CanRefactor(ParseTreeNode applyto)
