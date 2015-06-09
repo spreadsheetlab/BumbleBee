@@ -299,6 +299,7 @@
     </Compile>
     <Compile Include="Refactorings\AgregrateToConditionalAggregrate.cs" />
     <Compile Include="Refactorings\ExtractFormula.cs" />
+    <Compile Include="Refactorings\ExtractFormulaMenuStub.cs" />
     <Compile Include="Refactorings\GroupReferences.cs" />
     <Compile Include="Refactorings\NotImplementedRefactoring.cs" />
     <Compile Include="Refactorings\Util\Helper.cs" />

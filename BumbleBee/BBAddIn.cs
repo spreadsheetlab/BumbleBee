@@ -104,7 +104,7 @@ namespace ExcelAddIn3
     public partial class BBAddIn
     {
         /// Enable to profile speed where implemented
-        internal const bool PROFILE = true;
+        internal const bool PROFILE = false;
 
         public Ribbon1 theRibbon;
         readonly List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
@@ -525,7 +525,7 @@ namespace ExcelAddIn3
             }
 #endif
 
-            extractFormulaTp = new TaksPaneWPFContainer<ExtractFormulaTaskPane>(new ExtractFormulaTaskPane(Application));
+            extractFormulaTp = new TaksPaneWPFContainer<ExtractFormulaTaskPane>(new ExtractFormulaTaskPane());
             extractFormulaCtp = CustomTaskPanes.Add(extractFormulaTp, "Extract formula");
 
             RefactoringContextMenuInitialize();
@@ -539,9 +539,10 @@ namespace ExcelAddIn3
             InitializeBB();
         }
 
-        private TaksPaneWPFContainer<ExtractFormulaTaskPane> extractFormulaTp;
-        private CustomTaskPane extractFormulaCtp;
+        internal TaksPaneWPFContainer<ExtractFormulaTaskPane> extractFormulaTp;
+        internal CustomTaskPane extractFormulaCtp;
 
+        /*
         public void extractFormula()
         {
             extractFormulaTp.Child.init(Application.Selection);
@@ -576,6 +577,7 @@ namespace ExcelAddIn3
                 throw;
             }
         }
+         */
 
         private class RefactorMenuItem
         {
@@ -591,7 +593,7 @@ namespace ExcelAddIn3
             new RefactorMenuItem {MenuText="SUM to SUMIF", Refactoring=new GroupReferences()},
             new RefactorMenuItem {MenuText="Group References", Refactoring=new GroupReferences(), NewGroup = true},
             new RefactorMenuItem {MenuText="Inline Formula", Refactoring=new InlineFormula(), NewGroup = true},
-            new RefactorMenuItem {MenuText="Extract Formula", Refactoring=new NotImplementedRefactoring()},
+            new RefactorMenuItem {MenuText="Extract Formula", Refactoring=new ExtractFormulaMenuStub()},
         };
 
         private void RefactoringContextMenuInitialize()

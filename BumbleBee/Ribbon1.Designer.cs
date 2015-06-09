@@ -51,15 +51,11 @@
             this.group1 = this.Factory.CreateRibbonGroup();
             this.analyzeButton = this.Factory.CreateRibbonButton();
             this.selectSmellType = this.Factory.CreateRibbonDropDown();
-            this.groupRefactorings = this.Factory.CreateRibbonGroup();
-            this.buttonExtractFormula = this.Factory.CreateRibbonButton();
-            this.buttonInlineFormula = this.Factory.CreateRibbonButton();
             this.tab1.SuspendLayout();
             this.BumbleBee.SuspendLayout();
             this.groupInitialize.SuspendLayout();
             this.groupBumbleBee.SuspendLayout();
             this.group1.SuspendLayout();
-            this.groupRefactorings.SuspendLayout();
             // 
             // tab1
             // 
@@ -72,7 +68,6 @@
             this.BumbleBee.Groups.Add(this.groupInitialize);
             this.BumbleBee.Groups.Add(this.groupBumbleBee);
             this.BumbleBee.Groups.Add(this.group1);
-            this.BumbleBee.Groups.Add(this.groupRefactorings);
             this.BumbleBee.Label = "BumbleBee";
             this.BumbleBee.Name = "BumbleBee";
             // 
@@ -179,25 +174,6 @@
             this.selectSmellType.Name = "selectSmellType";
             this.selectSmellType.SelectionChanged += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.selectSmellType_SelectionChanged);
             // 
-            // groupRefactorings
-            // 
-            this.groupRefactorings.Items.Add(this.buttonExtractFormula);
-            this.groupRefactorings.Items.Add(this.buttonInlineFormula);
-            this.groupRefactorings.Label = "Refactorings";
-            this.groupRefactorings.Name = "groupRefactorings";
-            // 
-            // buttonExtractFormula
-            // 
-            this.buttonExtractFormula.Label = "Extract formula";
-            this.buttonExtractFormula.Name = "buttonExtractFormula";
-            this.buttonExtractFormula.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.buttonExtractFormula_Click);
-            // 
-            // buttonInlineFormula
-            // 
-            this.buttonInlineFormula.Label = "Inline formula";
-            this.buttonInlineFormula.Name = "buttonInlineFormula";
-            this.buttonInlineFormula.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.buttonInlineFormula_Click);
-            // 
             // Ribbon1
             // 
             this.Name = "Ribbon1";
@@ -215,8 +191,6 @@
             this.groupBumbleBee.PerformLayout();
             this.group1.ResumeLayout(false);
             this.group1.PerformLayout();
-            this.groupRefactorings.ResumeLayout(false);
-            this.groupRefactorings.PerformLayout();
 
         }
 
@@ -239,9 +213,6 @@
         internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonInitializeBumbleBee;
         internal Microsoft.Office.Tools.Ribbon.RibbonEditBox valuePreview;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton Initialize;
-        internal Microsoft.Office.Tools.Ribbon.RibbonGroup groupRefactorings;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonExtractFormula;
-		internal Microsoft.Office.Tools.Ribbon.RibbonButton buttonInlineFormula;
     }
 
     partial class ThisRibbonCollection

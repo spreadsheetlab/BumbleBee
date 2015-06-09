@@ -59,15 +59,5 @@ namespace ExcelAddIn3
         }
 
         #endif
-
-        private void buttonExtractFormula_Click(object sender, RibbonControlEventArgs e)
-        {
-            Globals.BBAddIn.extractFormula();
-        }
-
-        private void buttonInlineFormula_Click(object sender, RibbonControlEventArgs e)
-        {
-            Globals.BBAddIn.inlineFormula();
-        }
     }
 }

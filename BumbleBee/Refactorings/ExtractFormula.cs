@@ -7,7 +7,6 @@ using Microsoft.Office.Interop.Excel;
 
 namespace ExcelAddIn3.Refactorings
 {
-    // TODO: Refactor to implement the new interfaces
     public class ExtractFormula : RangeRefactoring
     {
         public Direction Dir { get; private set; }
