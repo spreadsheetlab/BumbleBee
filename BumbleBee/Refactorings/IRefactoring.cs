@@ -39,6 +39,11 @@ namespace ExcelAddIn3.Refactorings
         /// What type of targets a refactoring can Apply to
         /// </summary>
         protected abstract RangeShape.Flags AppliesTo { get; }
+
+        /// <summary>
+        /// Maximum number of cells to examine when checking if a refactoring applies.
+        /// </summary>
+        public const int MAX_CELLS = 64;
     }
 
 

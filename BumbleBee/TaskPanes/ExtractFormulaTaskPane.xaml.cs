@@ -52,10 +52,10 @@ namespace ExcelAddIn3.TaskPanes
             this.owner = owner;
 
             // Listen to selection changes
-            owner.SheetSelectionChange += (sheet, range) =>
+            /*owner.SheetSelectionChange += (sheet, range) =>
             {
                 newRange(range);
-            };
+            };*/
         }
 
         

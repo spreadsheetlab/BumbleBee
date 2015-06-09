@@ -103,6 +103,9 @@ namespace ExcelAddIn3
 
     public partial class BBAddIn
     {
+        /// Enable to profile speed where implemented
+        internal const bool PROFILE = true;
+
         public Ribbon1 theRibbon;
         readonly List<FSharpTransformationRule> AllTransformations = new List<FSharpTransformationRule>();
         public AnalysisController AnalysisController;
@@ -515,18 +518,20 @@ namespace ExcelAddIn3
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
-            #if DEBUG
+#if DEBUG
             foreach (var startupfile in BumbleBeeDebugStartupfiles.Where(System.IO.File.Exists))
             {
                 Application.Workbooks.Open(startupfile);
             }
-            #endif
+#endif
 
             extractFormulaTp = new TaksPaneWPFContainer<ExtractFormulaTaskPane>(new ExtractFormulaTaskPane(Application));
             extractFormulaCtp = CustomTaskPanes.Add(extractFormulaTp, "Extract formula");
 
             RefactoringContextMenuInitialize();
-            this.Application.SheetBeforeRightClick += new AppEvents_SheetBeforeRightClickEventHandler(RefactorMenuEnableRelevant);
+            this.Application.SheetBeforeRightClick +=
+                new AppEvents_SheetBeforeRightClickEventHandler(RefactorMenuEnableRelevant);
+
         }
 
         void Application_WorkbookOpen(Excel.Workbook Wb)
@@ -642,7 +647,18 @@ namespace ExcelAddIn3
         {
             foreach (var item in contextMenuRefactorings)
             {
+                Stopwatch sw;
+                if (PROFILE)
+                {
+                    sw = Stopwatch.StartNew();
+                }
                 item.Button.Enabled = item.Refactoring.CanRefactor(Target);
+                if (PROFILE)
+                {
+                    sw.Stop();
+                    var cap = item.MenuText;
+                    item.Button.Caption = String.Format("{0} ({1}s)", cap, sw.Elapsed.TotalSeconds);
+                }
             }
         }
 

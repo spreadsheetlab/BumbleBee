@@ -113,5 +113,10 @@ namespace ExcelAddIn3.Refactorings.Util
         {
             return String.Format("{0}!{1}", r.Worksheet.Name, r.Address[false,false]);
         }
+
+        public static IEnumerable<Range> CellsToInspect(this Range r)
+        {
+            return r.Cells.Cast<Range>().Take(RangeRefactoring.MAX_CELLS);
+        }
     }
 }

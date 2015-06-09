@@ -48,13 +48,15 @@ namespace ExcelAddIn3.Refactorings.Util
 
             // Check if all cells are in a single row
             int firstrow = ((Range) r.Item[1, 1]).Row;
-            if(r.Cells.Cast<Range>().All(x => x.Row == firstrow)) {
+            if (r.CellsToInspect().All(x => x.Row == firstrow))
+            {
                 rt |= Flags.SingleRow;
             }
 
             // Check if all cells are in a single column
             int firstcolumn = ((Range) r.Item[1, 1]).Column;
-            if(r.Cells.Cast<Range>().All(x => x.Column == firstcolumn)) {
+            if (r.CellsToInspect().All(x => x.Column == firstcolumn))
+            {
                 rt |= Flags.SingleColumn;
             }
 
@@ -92,7 +94,7 @@ namespace ExcelAddIn3.Refactorings.Util
 
         private static Flags HasContent(Range r)
         {
-            return r.Cells.Cast<Range>().Any(cell => cell.Value2 != null && cell.Value2.ToString().Trim() != "") ? Flags.NonEmpty : 0;
+            return r.CellsToInspect().Any(cell => cell.Value2 != null && cell.Value2.ToString().Trim() != "") ? Flags.NonEmpty : 0;
         }
 
         [Flags]

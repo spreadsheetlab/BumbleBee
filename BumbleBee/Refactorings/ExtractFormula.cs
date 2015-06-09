@@ -8,8 +8,24 @@ using Microsoft.Office.Interop.Excel;
 namespace ExcelAddIn3.Refactorings
 {
     // TODO: Refactor to implement the new interfaces
-    public static class ExtractFormula
+    public class ExtractFormula : RangeRefactoring
     {
+        public Direction Dir { get; private set; }
+        public ContextNode SubFormula { get; private set; }
+        public Location To { get; private set; }
+
+        public ExtractFormula(ContextNode subformula, Direction dir)
+        {
+            SubFormula = subformula;
+            Dir = dir;
+        }
+
+        public ExtractFormula(ContextNode subformula, Location to)
+        {
+            SubFormula = subformula;
+            To = to;
+        }
+
         public class Direction : Tuple<int, int>
         {
             public enum DIR
@@ -39,6 +55,26 @@ namespace ExcelAddIn3.Refactorings
 
             public static bool operator ==(Direction a, Direction b) { return ReferenceEquals(a,null) ? ReferenceEquals(b, null) : a.Equals(b); }
             public static bool operator !=(Direction a, Direction b) { return !(a == b); }
+        }
+
+        public override void Refactor(Range applyto)
+        {
+            if (To != null)
+            {
+                Refactor(applyto, To, SubFormula);
+            }
+            else
+            {
+                Refactor(applyto, Dir, SubFormula);
+            }
+            
+        }
+
+        public override bool CanRefactor(Range applyto)
+        {
+            if (!base.CanRefactor(applyto)) return false;
+            // Check if all cells contain the subformula
+            return NotContainingSubformula(applyto, SubFormula) == null;
         }
 
         /// <summary>
@@ -112,7 +148,7 @@ namespace ExcelAddIn3.Refactorings
             var notContaining = NotContainingSubformula(applyto, subformula);
             if (notContaining != null)
             {
-                throw new ArgumentException(String.Format((string) "Not all cells contain that subformula, for example: {0}", (object) notContaining.Address[false,false]));
+                throw new ArgumentException(String.Format((string)"Not all cells contain that subformula, for example: {0}", (object)notContaining.Address[false, false]));
             }
 
             Range target = applyto.Worksheet.Cells[to.Row1, to.Column1];
@@ -160,6 +196,11 @@ namespace ExcelAddIn3.Refactorings
                 .Select(group => new {parse = Helper.ParseCtx(@group.First(), subformula.Ctx), example = @group.First()})
                 .FirstOrDefault(t => !t.parse.Contains(subformula));
             return which != null ? which.example : null;
+        }
+
+        protected override RangeShape.Flags AppliesTo
+        {
+            get { return RangeShape.Flags.NonEmpty; }
         }
     }
 }
