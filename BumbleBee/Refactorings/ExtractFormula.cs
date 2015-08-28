@@ -1,11 +1,11 @@
 using System;
 using System.Linq;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings.Util;
 using Infotron.Parsing;
 using Infotron.Util;
 using Microsoft.Office.Interop.Excel;
 
-namespace ExcelAddIn3.Refactorings
+namespace BumbleBee.Refactorings
 {
     public class ExtractFormula : RangeRefactoring
     {

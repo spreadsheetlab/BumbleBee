@@ -7,9 +7,9 @@ using System.Text;
 using System.Windows.Forms;
 using Microsoft.Office.Tools.Ribbon;
 
-namespace ExcelAddIn3
+namespace BumbleBee
 {
-    public partial class Ribbon1
+    public partial class BumbleBeeRibbon
     {
         private void Ribbon1_Load(object sender, RibbonUIEventArgs e)
         {
@@ -18,44 +18,44 @@ namespace ExcelAddIn3
 
         private void button1_Click_1(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.FindApplicableTransformations();
+            Globals.BBAddIn.bbTransformations.FindApplicableTransformations();
         }
 
         private void button2_Click(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.ApplyTransformation(ApplyTo.Range);
+            Globals.BBAddIn.bbTransformations.ApplyTransformation(ApplyTo.Range);
         }
 
         private void dropDown1_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.MakePreview();
+            Globals.BBAddIn.bbTransformations.MakePreview(Globals.BBAddIn);
         }
 
         private void button3_Click(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.ApplyTransformation(ApplyTo.Workbook);
+            Globals.BBAddIn.bbTransformations.ApplyTransformation(ApplyTo.Workbook);
         }
 
         private void button4_Click(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.ApplyTransformation(ApplyTo.Worksheet);
+            Globals.BBAddIn.bbTransformations.ApplyTransformation(ApplyTo.Worksheet);
         }
 
         #if DEBUG 
 
         private void button5_Click(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.ColorSmells();
+            Globals.BBAddIn.BBColorSmells.ColorSmells();
         }
 
         private void selectSmellType_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.SelectSmellsOfType();
+            Globals.BBAddIn.BBColorSmells.SelectSmellsOfType();
         }
 
         private void buttonInitializeBumbleBee_Click_1(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.AddSheetBumbleBeeTransformations();
+            Globals.BBAddIn.bbTransformations.AddSheetBumbleBeeTransformations();
         }
 
         #endif

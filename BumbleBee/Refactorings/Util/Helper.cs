@@ -8,7 +8,7 @@ using Infotron.Parsing;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
 
-namespace ExcelAddIn3.Refactorings.Util
+namespace BumbleBee.Refactorings.Util
 {
     public static class Helper
     {

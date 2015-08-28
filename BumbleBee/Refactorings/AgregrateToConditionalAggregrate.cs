@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings.Util;
 using Infotron.Parsing;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
 
-namespace ExcelAddIn3.Refactorings
+namespace BumbleBee.Refactorings
 {
     class AgregrateToConditionalAggregrate : RangeRefactoring
     {

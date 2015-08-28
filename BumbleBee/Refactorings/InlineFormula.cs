@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings.Util;
 using Microsoft.Office.Interop.Excel;
 using Infotron.Parsing;
+using XLParser;
 
-namespace ExcelAddIn3.Refactorings
+namespace BumbleBee.Refactorings
 {
     public class InlineFormula : RangeRefactoring
     {

@@ -5,13 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings.Util;
 using Microsoft.Office.Interop.Excel;
 using Infotron.Parsing;
 using Infotron.Util;
 using Irony.Parsing;
 
-namespace ExcelAddIn3.Refactorings
+namespace BumbleBee.Refactorings
 {
     /// <summary>
     /// Group a set of references

@@ -4,12 +4,12 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings.Util;
 using Infotron.Parsing;
 using Irony.Parsing;
 using P = Infotron.Parsing.ExcelFormulaParser;
 
-namespace ExcelAddIn3.Refactorings
+namespace BumbleBee.Refactorings
 {
     /// <summary>
     /// Transforms a sequence of identical operators to the corresponding aggregate function.

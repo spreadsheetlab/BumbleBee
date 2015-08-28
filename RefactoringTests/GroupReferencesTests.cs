@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using ExcelAddIn3.Refactorings;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings;
+using BumbleBee.Refactorings.Util;
 using Infotron.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Office.Interop.Excel;

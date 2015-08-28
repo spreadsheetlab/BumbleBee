@@ -1,13 +1,13 @@
-﻿namespace ExcelAddIn3
+﻿namespace BumbleBee
 {
-    partial class Ribbon1 : Microsoft.Office.Tools.Ribbon.RibbonBase
+    partial class BumbleBeeRibbon : Microsoft.Office.Tools.Ribbon.RibbonBase
     {
         /// <summary>
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        public Ribbon1()
+        public BumbleBeeRibbon()
             : base(Globals.Factory.GetRibbonFactory())
         {
             InitializeComponent();
@@ -34,7 +34,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Ribbon1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BumbleBeeRibbon));
             this.tab1 = this.Factory.CreateRibbonTab();
             this.BumbleBee = this.Factory.CreateRibbonTab();
             this.groupInitialize = this.Factory.CreateRibbonGroup();
@@ -176,7 +176,7 @@
             // 
             // Ribbon1
             // 
-            this.Name = "Ribbon1";
+            this.Name = "BumbleBeeRibbon";
             this.RibbonType = "Microsoft.Excel.Workbook";
             this.Tabs.Add(this.tab1);
             this.Tabs.Add(this.BumbleBee);
@@ -217,9 +217,9 @@
 
     partial class ThisRibbonCollection
     {
-        internal Ribbon1 Ribbon1
+        internal BumbleBeeRibbon BumbleBeeRibbon
         {
-            get { return this.GetRibbon<Ribbon1>(); }
+            get { return this.GetRibbon<BumbleBeeRibbon>(); }
         }
     }
 }

@@ -18,10 +18,10 @@ using Infotron.Parsing;
 using Microsoft.Office.Interop.Excel;
 using System.IO;
 using System.Runtime.InteropServices;
-using ExcelAddIn3.Refactorings;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings;
+using BumbleBee.Refactorings.Util;
 
-namespace ExcelAddIn3.TaskPanes
+namespace BumbleBee.TaskPanes
 {
     /// <summary>
     /// Interaction logic for ExtractFormulaTaskPane.xaml
@@ -316,7 +316,7 @@ namespace ExcelAddIn3.TaskPanes
                 {
                     ExtractFormula.Refactor(OrRange, Direction, Formula);
                 }
-                Globals.BBAddIn.extractFormulaCtp.Visible = false;
+                Globals.BBAddIn.MenuRefactorings.extractFormulaCtp.Visible = false;
             }
             catch (ArgumentException ex)
             {

@@ -7,7 +7,7 @@ using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
 using System.Threading.Tasks;
 
-namespace ExcelAddIn3.Refactorings.Util
+namespace BumbleBee.Refactorings.Util
 {
     /// <summary>
     /// Class that determines if the shape of a range has certain features, e.g. if it is nonempty or a single column.

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ExcelAddIn3.Properties {
+namespace BumbleBee.Properties {
     using System;
     
     

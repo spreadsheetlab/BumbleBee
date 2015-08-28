@@ -25,7 +25,7 @@
     <ProjectGuid>{23E01965-F3AC-40A7-98EF-A3BD71FE7448}</ProjectGuid>
     <OutputType>Library</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
-    <RootNamespace>ExcelAddIn3</RootNamespace>
+    <RootNamespace>BumbleBee</RootNamespace>
     <AssemblyName>BumbleBee</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>
@@ -198,8 +198,8 @@
       <HintPath>..\packages\DotNetZip.Reduced.1.9.1.8\lib\net20\Ionic.Zip.Reduced.dll</HintPath>
     </Reference>
     <Reference Include="Irony, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ca48ace7223ead47, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\PerfectXL.Dependencies.0.8.0\lib\Irony.dll</HintPath>
+      <HintPath>..\packages\Irony.0.9.0\lib\net45\Irony.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
       <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -261,6 +261,10 @@
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="XLParser, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\XLParser.1.1.3\lib\net45\XLParser.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="yFilesAdapter">
       <HintPath>..\packages\PerfectXL.Dependencies.0.8.0\lib\yFilesAdapter.dll</HintPath>
     </Reference>
@@ -294,6 +298,9 @@
     can be found.
   -->
   <ItemGroup>
+    <Compile Include="BBColorSmells.cs" />
+    <Compile Include="BBMenuRefactorings.cs" />
+    <Compile Include="BBTransformations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -326,8 +333,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="Ribbon1.resx">
-      <DependentUpon>Ribbon1.cs</DependentUpon>
+    <EmbeddedResource Include="BumbleBeeRibbon.resx">
+      <DependentUpon>BumbleBeeRibbon.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TaskPanes\TaksPaneWPFContainer.resx">
       <DependentUpon>TaksPaneWPFContainer.cs</DependentUpon>
@@ -347,11 +354,11 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Ribbon1.cs">
+    <Compile Include="BumbleBeeRibbon.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Ribbon1.Designer.cs">
-      <DependentUpon>Ribbon1.cs</DependentUpon>
+    <Compile Include="BumbleBeeRibbon.Designer.cs">
+      <DependentUpon>BumbleBeeRibbon.cs</DependentUpon>
     </Compile>
     <Compile Include="BBAddIn.cs">
       <SubType>Code</SubType>
@@ -427,7 +434,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
         <ProjectProperties HostName="Excel" HostPackage="{29A7B9D7-A7F1-4328-8EF0-6B2D1A56B2C1}" OfficeVersion="15.0" VstxVersion="4.0" ApplicationType="Excel" Language="cs" TemplatesPath="VSTOTemplates" DebugInfoExeName="#Software\Microsoft\Office\15.0\Excel\InstallRoot\Path#excel.exe" DebugInfoCommandLine="/x " AddItemTemplatesGuid="{51063C3A-E220-4D12-8922-BDA915ACD783}" />
-        <Host Name="Excel" GeneratedCodeNamespace="ExcelAddIn3" PublishedHash="69C324AB27932AA2FBF2B7EA72250886FF164DE6" IconIndex="0">
+        <Host Name="Excel" GeneratedCodeNamespace="BumbleBee" PublishedHash="69C324AB27932AA2FBF2B7EA72250886FF164DE6" IconIndex="0">
           <HostItem Name="ThisAddIn" Code="BBAddIn.cs" CanonicalName="AddIn" PublishedHash="309D3F284850C9DE5CB531BF419AAE0C5D91FA84" CanActivate="false" IconIndex="1" Blueprint="BBAddIn.Designer.xml" GeneratedCode="BBAddIn.Designer.cs" />
         </Host>
       </FlavorProperties>
