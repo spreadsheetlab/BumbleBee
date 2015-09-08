@@ -12,8 +12,8 @@ namespace BumbleBee.Refactorings
     {
         public override void Refactor(Range applyto)
         {
-            Globals.BBAddIn.MenuRefactorings.extractFormulaTp.Child.init(applyto);
-            Globals.BBAddIn.MenuRefactorings.extractFormulaCtp.Visible = true;
+            Globals.BBAddIn.bbMenuRefactorings.extractFormulaTp.Child.init(applyto);
+            Globals.BBAddIn.bbMenuRefactorings.extractFormulaCtp.Visible = true;
         }
 
         public override bool CanRefactor(Range applyto)

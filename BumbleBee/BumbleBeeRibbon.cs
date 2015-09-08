@@ -45,12 +45,12 @@ namespace BumbleBee
 
         private void button5_Click(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.BBColorSmells.ColorSmells();
+            Globals.BBAddIn.bbColorSmells.ColorSmells();
         }
 
         private void selectSmellType_SelectionChanged(object sender, RibbonControlEventArgs e)
         {
-            Globals.BBAddIn.BBColorSmells.SelectSmellsOfType();
+            Globals.BBAddIn.bbColorSmells.SelectSmellsOfType();
         }
 
         private void buttonInitializeBumbleBee_Click_1(object sender, RibbonControlEventArgs e)

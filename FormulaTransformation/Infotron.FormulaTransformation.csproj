@@ -79,10 +79,6 @@
     <Reference Include="EPPlus">
       <HintPath>..\packages\PerfectXL.Dependencies.0.8.0\lib\EPPlus.dll</HintPath>
     </Reference>
-    <Reference Include="FormulaParser, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\PerfectXLCore.0.7.5.0\lib\net45\FormulaParser.dll</HintPath>
-    </Reference>
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="GemBox.Spreadsheet">
       <HintPath>..\packages\PerfectXL.Dependencies.0.8.0\lib\GemBox.Spreadsheet.dll</HintPath>
@@ -94,8 +90,8 @@
       <HintPath>..\packages\DotNetZip.Reduced.1.9.1.8\lib\net20\Ionic.Zip.Reduced.dll</HintPath>
     </Reference>
     <Reference Include="Irony, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ca48ace7223ead47, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\PerfectXL.Dependencies.0.8.0\lib\Irony.dll</HintPath>
+      <HintPath>..\packages\Irony.0.9.0\lib\net45\Irony.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -127,6 +123,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\PerfectXLCore.0.7.5.0\lib\net45\Util.dll</HintPath>
     </Reference>
+    <Reference Include="XLParser, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\XLParser.1.1.4\lib\net45\XLParser.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="yFilesAdapter">
       <HintPath>..\packages\PerfectXL.Dependencies.0.8.0\lib\yFilesAdapter.dll</HintPath>
     </Reference>
@@ -144,6 +144,7 @@
     <Compile Include="FormulaTransformation_FSharp.cs" />
     <Compile Include="FSharpFormulaHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TransformationRuleGrammar.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FSharpEngine\Infotron.FSharpEngine.fsproj">

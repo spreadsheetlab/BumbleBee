@@ -5,16 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Irony.Parsing;
-using Infotron.Parsing;
 using FSharpEngine;
 using Microsoft.FSharp.Collections;
 using Infotron.Util;
+using XLParser;
 
 namespace Infotron.FSharpFormulaTransformation
 {
     public static class FSharpFormulaHelper
     {
-        private static readonly Parser parser = new Irony.Parsing.Parser(new TransformationRuleGrammar());
+        private static readonly Parser parser = new Parser(new TransformationRuleGrammar());
 
         /// <summary>
         /// Parse a BumbleBee or Excel formula to a parse tree
@@ -43,14 +43,17 @@ namespace Infotron.FSharpFormulaTransformation
         /// </summary>
         public static FSharpTransform.Formula CreateFSharpTree(this ParseTreeNode input)
         {
-            var termName = input.Term.Name;
+            input = input.SkipToRelevant();
 
-            // Switch isn't possible due to GrammarNames.* not being constants (yet)
-            if (termName == GrammarNames.Reference)
+            switch (input.Term.Name)
             {
-                // Skip prefix
-                return CreateFSharpTree(input.ChildNodes[input.ChildNodes.Count==1?0:1]);
+                case GrammarNames.Reference:
+                    // Skip prefix
+                    return CreateFSharpTree(input.ChildNodes[input.ChildNodes.Count == 1 ? 0 : 1]);
+                default:
+                    throw new ArgumentException("Can't convert this node type", nameof(input));
             }
+
             else if (termName == GrammarNames.Formula ||
                 termName == GrammarNames.CellorRange ||
                 termName == GrammarNames.Argument)

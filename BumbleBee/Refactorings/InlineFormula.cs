@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using BumbleBee.Refactorings.Util;
 using Microsoft.Office.Interop.Excel;
 using Infotron.Parsing;
-using XLParser;
+//using XLParser;
 
 namespace BumbleBee.Refactorings
 {

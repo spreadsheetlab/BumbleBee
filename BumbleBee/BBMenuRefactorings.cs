@@ -51,6 +51,10 @@ namespace BumbleBee
             public Microsoft.Office.Core.CommandBarButton Button { get; set; }
         }
 
+        
+        /// <summary>
+        /// Create the refactoring context menu
+        /// </summary>
         private void RefactoringContextMenuInitialize()
         {
             const string tag = "REFACTORMENU";
@@ -94,28 +98,20 @@ namespace BumbleBee
                     }
                     catch (Exception e)
                     {
-                        MessageBox.Show(string.Format("Error: {0}", e.Message));
+                        MessageBox.Show($"Error: {e.Message}");
                     }
                 };
             }
         }
 
+        /// <summary>
+        /// This method enables/disables the refactorings in the context menu
+        /// </summary>
         private void RefactorMenuEnableRelevant(object Sh, Range Target, ref bool Cancel)
         {
             foreach (var item in contextMenuRefactorings)
             {
-                Stopwatch sw;
-                if (PROFILE)
-                {
-                    sw = Stopwatch.StartNew();
-                }
                 item.Button.Enabled = item.Refactoring.CanRefactor(Target);
-                if (PROFILE)
-                {
-                    sw.Stop();
-                    var cap = item.MenuText;
-                    item.Button.Caption = String.Format("{0} ({1}s)", cap, sw.Elapsed.TotalSeconds);
-                }
             }
         }
     }

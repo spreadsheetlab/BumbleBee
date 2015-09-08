@@ -196,7 +196,8 @@ namespace BumbleBee.TaskPanes
 
 
         public ContextNode RefactoredFormula { get; private set; }
-        public string RefactoredFormulaStr { get { return RefactoredFormula != null ? RefactoredFormula.Print() : ""; }}
+        public string RefactoredFormulaStr => RefactoredFormula != null ? RefactoredFormula.Print() : "";
+
         private void setRefactoredFormula()
         {
             if (orFormula == null || Formula == null || NewCellAddress == null) return;
@@ -226,7 +227,7 @@ namespace BumbleBee.TaskPanes
                     }
                     catch (InvalidDataException e)
                     {
-                        throw new ArgumentException("Not a valid formula", "value", e);
+                        throw new ArgumentException("Not a valid formula", nameof(value), e);
                     }
                     formulaValid = true;
                     OnPropertyChanged("Formula");
@@ -316,7 +317,7 @@ namespace BumbleBee.TaskPanes
                 {
                     ExtractFormula.Refactor(OrRange, Direction, Formula);
                 }
-                Globals.BBAddIn.MenuRefactorings.extractFormulaCtp.Visible = false;
+                Globals.BBAddIn.bbMenuRefactorings.extractFormulaCtp.Visible = false;
             }
             catch (ArgumentException ex)
             {
