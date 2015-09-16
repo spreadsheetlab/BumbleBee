@@ -3,12 +3,12 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Infotron.Parsing;
 using Irony.Parsing;
 using Infotron.FSharpFormulaTransformation;
 using Microsoft.FSharp;
 using Microsoft.FSharp.Collections;
 using FSharpEngine;
+using XLParser;
 
 
 namespace TransformationTests
@@ -20,12 +20,8 @@ namespace TransformationTests
         [TestMethod]
         public void ConvertCell()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            string Cell = "A1";
-            ParseTree Original = P.ParseToTree(Cell);
-
             FSharpTransformationRule T = new FSharpTransformationRule();
-            FSharpTransform.Formula F = T.CreateFSharpTree(Original.Root);
+            FSharpTransform.Formula F = T.CreateFSharpTree(ExcelFormulaParser.Parse("A1"));
             
             Assert.IsNotNull(F);
         }
@@ -33,12 +29,8 @@ namespace TransformationTests
         [TestMethod]
         public void ConvertRange()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            string Cell = "A1:B7";
-            ParseTree Original = P.ParseToTree(Cell);
-
             FSharpTransformationRule T = new FSharpTransformationRule();
-            FSharpTransform.Formula F = T.CreateFSharpTree(Original.Root);
+            FSharpTransform.Formula F = T.CreateFSharpTree(ExcelFormulaParser.Parse("A1:B7"));
 
             Assert.IsNotNull(F);
         }
@@ -46,12 +38,12 @@ namespace TransformationTests
         [TestMethod]
         public void ConvertFunction()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
+            
             string Cell = "SUM(A1:B7)";
-            ParseTree Original = P.ParseToTree(Cell);
+            
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            FSharpTransform.Formula F = T.CreateFSharpTree(Original.Root);
+            FSharpTransform.Formula F = T.CreateFSharpTree(ExcelFormulaParser.Parse(Cell));
 
             Assert.IsNotNull(F);
         }
@@ -59,12 +51,12 @@ namespace TransformationTests
         [TestMethod]
         public void ConvertSheetReference()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
+            
             string Cell = "Sheet!A1";
-            ParseTree Original = P.ParseToTree(Cell);
+            
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            FSharpTransform.Formula F = T.CreateFSharpTree(Original.Root);
+            FSharpTransform.Formula F = T.CreateFSharpTree(ExcelFormulaParser.Parse(Cell));
 
             Assert.IsNotNull(F);
         }
@@ -73,84 +65,83 @@ namespace TransformationTests
         [TestMethod]
         public void Can_Apply_Normal_Cell_Reference()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1");
+            string Cell = "A1";
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            T.from = (P.ParseToTree("A1")).Root;
+            T.from = ExcelFormulaParser.Parse(Cell);
 
-            Assert.IsTrue(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsTrue(T.CanBeAppliedonBool(ExcelFormulaParser.Parse(Cell)));
         }
 
         [TestMethod]
         public void Can_Apply_Calculation()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1+A2");
+            
+            var Original = ExcelFormulaParser.Parse("A1+A2");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            T.from = (P.ParseToTree("A1+A2")).Root;
-            T.to = (P.ParseToTree("SUM(A1:A2)")).Root;
+            T.from = (ExcelFormulaParser.Parse("A1+A2"));
+            T.to = (ExcelFormulaParser.Parse("SUM(A1:A2)"));
 
-            Assert.IsTrue(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsTrue(T.CanBeAppliedonBool(Original));
         }
 
         [TestMethod]
         public void Can_not_Apply_Calculation()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1*A2");
+            
+            var Original = ExcelFormulaParser.Parse("A1*A2");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            T.from = (P.ParseToTree("A1+A2")).Root;
-            T.to = (P.ParseToTree("SUM(A1:A2)")).Root;
+            T.from = (ExcelFormulaParser.Parse("A1+A2"));
+            T.to = (ExcelFormulaParser.Parse("SUM(A1:A2)"));
 
-            Assert.IsFalse(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsFalse(T.CanBeAppliedonBool(Original));
         }
 
         [TestMethod]
         [Ignore]
         public void Can_Not_Apply_In_SubFormulas()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("(A1+A2)*A5");
+            
+            var Original = ExcelFormulaParser.Parse("(A1+A2)*A5");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            T.from = (P.ParseToTree("A1+A2")).Root;
-            T.to = (P.ParseToTree("SUM(A1:A2)")).Root;
+            T.from = (ExcelFormulaParser.Parse("A1+A2"));
+            T.to = (ExcelFormulaParser.Parse("SUM(A1:A2)"));
 
-            Assert.IsFalse(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsFalse(T.CanBeAppliedonBool(Original));
         }
 
         [TestMethod]
         public void Can_Apply_In_SubFormulas()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A1+A2)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A1+A2)");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            T.from = (P.ParseToTree("SUM(A1+A2)")).Root;
-            T.to = (P.ParseToTree("A1+A2")).Root;
+            T.from = (ExcelFormulaParser.Parse("SUM(A1+A2)"));
+            T.to = (ExcelFormulaParser.Parse("A1+A2"));
 
-            Assert.IsTrue(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsTrue(T.CanBeAppliedonBool(Original));
 
-            var map = (T.CanBeAppliedonMap(Original.Root));
+            var map = (T.CanBeAppliedonMap(Original));
         }
 
 
         [TestMethod]
         public void Can_Apply_Dynamic_Cell_Reference()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1");
+            
+            var Original = ExcelFormulaParser.Parse("A1");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("{i,j}");
 
-            var Result = T.CanBeAppliedonBool(Original.Root);
+            var Result = T.CanBeAppliedonBool(Original);
             Assert.IsTrue(Result);
 
-            var Map = T.CanBeAppliedonMap(Original.Root);
+            var Map = T.CanBeAppliedonMap(Original);
 
             Assert.IsTrue(Map.ContainsKey('i'));
             Assert.IsTrue(Map.ContainsKey('j'));
@@ -161,15 +152,15 @@ namespace TransformationTests
         [TestMethod]
         public void Can_Apply_Dynamic_Range_On_Cell_Reference()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A1)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A1)");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("SUM({r})");
             T.to = null;
 
-            Assert.IsTrue(T.CanBeAppliedonBool(Original.Root));           
-            var Map = T.CanBeAppliedonMap(Original.Root);
+            Assert.IsTrue(T.CanBeAppliedonBool(Original));           
+            var Map = T.CanBeAppliedonMap(Original);
 
             Assert.IsTrue(Map.ContainsKey('r'));
 
@@ -183,16 +174,16 @@ namespace TransformationTests
         [TestMethod]
         public void Can_Apply_Dynamic_Range_On_Range_Reference()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A2:B5)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A2:B5)");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("SUM({r})");
             T.to = null;
 
-            Assert.IsTrue(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsTrue(T.CanBeAppliedonBool(Original));
 
-            var Map = T.CanBeAppliedonMap(Original.Root);
+            var Map = T.CanBeAppliedonMap(Original);
 
             Assert.IsTrue(Map.ContainsKey('r'));
 
@@ -208,16 +199,16 @@ namespace TransformationTests
         [TestMethod]
         public void Can_Apply_Double_Dynamic_Reference()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A2:B5)+C5");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A2:B5)+C5");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("SUM({r})+{i,j}");
             T.to = null;
 
-            Assert.IsTrue(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsTrue(T.CanBeAppliedonBool(Original));
 
-            var Map = T.CanBeAppliedonMap(Original.Root);
+            var Map = T.CanBeAppliedonMap(Original);
 
             Assert.IsTrue(Map.ContainsKey('r'));
 
@@ -244,89 +235,89 @@ namespace TransformationTests
         [TestMethod]
         public void Can_Not_Apply_Different_Dynamic_Cells()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A3");
+            
+            var Original = ExcelFormulaParser.Parse("A3");
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("{i,i}");
             T.to = null;
 
-            Assert.IsFalse(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsFalse(T.CanBeAppliedonBool(Original));
         }
 
         [TestMethod]
         public void Can_Not_Apply_Different_Dynamic_Range()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A2:C7)+SUM(A2:C6)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A2:C7)+SUM(A2:C6)");
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("SUM({r})+SUM({r})");
             T.to = null;
 
-            Assert.IsFalse(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsFalse(T.CanBeAppliedonBool(Original));
         }
 
 
         [TestMethod]
         public void Can_Apply_Dynamic_Cell_Reference_Multiple_Places()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1+A2");
+            
+            var Original = ExcelFormulaParser.Parse("A1+A2");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("{i,j}+{i,j+1}");
             T.to = null;
 
-            Assert.IsTrue(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsTrue(T.CanBeAppliedonBool(Original));
         }
 
 
         [TestMethod]
         public void Can_not_Apply_Dynamic_Cell_Reference_Multiple_Places()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1+A2");
+            
+            var Original = ExcelFormulaParser.Parse("A1+A2");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("{i,j}+{i+1,j}");
             T.to = null;
 
-            Assert.IsFalse(T.CanBeAppliedonBool(Original.Root));
+            Assert.IsFalse(T.CanBeAppliedonBool(Original));
         }
 
         [TestMethod]
         public void Dynamic_Argument_Can_Be_Text()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("\"5\"");
+            
+            var Original = ExcelFormulaParser.Parse("\"5\"");
 
             FSharpTransformationRule S1 = new FSharpTransformationRule();
             S1.from = S1.ParseToTree("[c]");
 
-            Assert.AreEqual(true, S1.CanBeAppliedonBool(Original.Root));
+            Assert.AreEqual(true, S1.CanBeAppliedonBool(Original));
         }
 
         [TestMethod]
         public void Dynamic_Argument_Can_Be_Cell()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1");
+            
+            var Original = ExcelFormulaParser.Parse("A1");
 
             FSharpTransformationRule S1 = new FSharpTransformationRule();
             S1.from = S1.ParseToTree("[c]");
 
-            Assert.AreEqual(true, S1.CanBeAppliedonBool(Original.Root));
+            Assert.AreEqual(true, S1.CanBeAppliedonBool(Original));
         }
 
         [TestMethod]
         public void Dynamic_Argument_Can_Be_Formula()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A1)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A1)");
 
             FSharpTransformationRule S1 = new FSharpTransformationRule();
             S1.from = S1.ParseToTree("[c]");
 
-            Assert.AreEqual(true, S1.CanBeAppliedonBool(Original.Root));
+            Assert.AreEqual(true, S1.CanBeAppliedonBool(Original));
         }
 
         [TestMethod]
@@ -349,14 +340,14 @@ namespace TransformationTests
         [TestMethod]
         public void Super_Simple_Transform()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1");
+            
+            var Original = ExcelFormulaParser.Parse("A1");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            T.from = (P.ParseToTree("A1")).Root;
-            T.to = (P.ParseToTree("A2")).Root;
+            T.from = (ExcelFormulaParser.Parse("A1"));
+            T.to = (ExcelFormulaParser.Parse("A2"));
 
-            FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
+            FSharpTransform.Formula Result = T.ApplyOn(Original);
 
             Assert.AreEqual("A2", T.Print(Result));
         }
@@ -364,14 +355,14 @@ namespace TransformationTests
         [TestMethod]
         public void Simple_Transform()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1+A2");
+            
+            var Original = ExcelFormulaParser.Parse("A1+A2");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            T.from = (P.ParseToTree("A1+A2")).Root;
-            T.to = (P.ParseToTree("SUM(A1:A2)")).Root;
+            T.from = (ExcelFormulaParser.Parse("A1+A2"));
+            T.to = (ExcelFormulaParser.Parse("SUM(A1:A2)"));
 
-            FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
+            FSharpTransform.Formula Result = T.ApplyOn(Original);
 
             Assert.AreEqual("SUM(A1:A2)", T.Print(Result));
         }
@@ -379,16 +370,16 @@ namespace TransformationTests
         [TestMethod]
         public void Transform_in_Arguments()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("(A1+A2)/3");
+            
+            var Original = ExcelFormulaParser.Parse("(A1+A2)/3");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            T.from = (P.ParseToTree("A1+A2")).Root;
-            T.to = (P.ParseToTree("SUM(A1:A2)")).Root;
+            T.from = (ExcelFormulaParser.Parse("A1+A2"));
+            T.to = (ExcelFormulaParser.Parse("SUM(A1:A2)"));
 
-            bool x = T.CanBeAppliedonBool(Original.Root);
+            bool x = T.CanBeAppliedonBool(Original);
 
-            FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
+            FSharpTransform.Formula Result = T.ApplyOn(Original);
 
             Assert.AreEqual("(SUM(A1:A2))/3", T.Print(Result));
         }
@@ -396,14 +387,14 @@ namespace TransformationTests
         [TestMethod]
         public void Double_Transform()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("(A1+A2)*(A1+A2)");
+            
+            var Original = ExcelFormulaParser.Parse("(A1+A2)*(A1+A2)");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
-            T.from = (P.ParseToTree("A1+A2")).Root;
-            T.to = (P.ParseToTree("SUM(A1:A2)")).Root;
+            T.from = (ExcelFormulaParser.Parse("A1+A2"));
+            T.to = (ExcelFormulaParser.Parse("SUM(A1:A2)"));
 
-            FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
+            FSharpTransform.Formula Result = T.ApplyOn(Original);
 
             Assert.AreEqual("(SUM(A1:A2))*(SUM(A1:A2))", T.Print(Result));
         }
@@ -412,15 +403,15 @@ namespace TransformationTests
         [TestMethod]
         public void Transform_Dynamic_Cell_Reference()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1");
+            
+            var Original = ExcelFormulaParser.Parse("A1");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("{i,j}");
             T.to = T.ParseToTree("{i,5}");
 
-            FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
-            ParseTreeNode Expected = (P.ParseToTree("A5")).Root;
+            FSharpTransform.Formula Result = T.ApplyOn(Original);
+            ParseTreeNode Expected = (ExcelFormulaParser.Parse("A5"));
 
             Assert.AreEqual("A5", T.Print(Result));
         }
@@ -429,15 +420,15 @@ namespace TransformationTests
         [TestMethod]
         public void Transform_Dynamic_Cell_Calculation()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("A1");
+            
+            var Original = ExcelFormulaParser.Parse("A1");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("{i,j}");
             T.to = T.ParseToTree("{i,j+1}");
 
-            FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
-            ParseTreeNode Expected = (P.ParseToTree("A2")).Root;
+            FSharpTransform.Formula Result = T.ApplyOn(Original);
+            ParseTreeNode Expected = (ExcelFormulaParser.Parse("A2"));
 
             Assert.AreEqual("A2", T.Print(Result));
         }
@@ -445,15 +436,15 @@ namespace TransformationTests
         //[TestMethod]
         //public void Dynamic_Transform_in_arguments()
         //{
-        //    ExcelFormulaParser P = new ExcelFormulaParser();
-        //    ParseTree Original = P.ParseToTree("A1+B1");
+        //    
+        //    var Original = ExcelFormulaParser.Parse("A1+B1");
 
         //    TransformationRule T = new TransformationRule();
         //    T.from = T.ParseToTree("{i,j}+{i+1,j}");
         //    T.to = T.ParseToTree("SUM({i,j}:{i+1,j})");
 
-        //    FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
-        //    ParseTreeNode Expected = (P.ParseToTree("SUM(A1:B1)")).Root;
+        //    FSharpTransform.Formula Result = T.ApplyOn(ExcelFormulaParser.Parse(Cell));
+        //    ParseTreeNode Expected = (ExcelFormulaParser.Parse("SUM(A1:B1)"));
 
         //    Assert.AreEqual(TransformationRule.Print(Expected), TransformationRule.Print(Result));
         //}
@@ -462,14 +453,14 @@ namespace TransformationTests
         [TestMethod]
         public void Dynamic_Range_Transform()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A1:B1)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A1:B1)");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("SUM({r})");
             T.to = T.ParseToTree("SUM({r})+1");
 
-            FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
+            FSharpTransform.Formula Result = T.ApplyOn(Original);
             Assert.AreEqual("SUM(A1:B1)+1", T.Print(Result));
         }
 
@@ -488,14 +479,14 @@ namespace TransformationTests
         [TestMethod]
         public void Dynamic_Range_Transform_With_Cell()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A7)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A7)");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("SUM({r})");
             T.to = T.ParseToTree("SUM({r})+1");
 
-            FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
+            FSharpTransform.Formula Result = T.ApplyOn(Original);
 
             Assert.AreEqual("SUM(A7)+1", T.Print(Result));
         }
@@ -504,16 +495,16 @@ namespace TransformationTests
         [TestMethod]
         public void Merge_Ranges()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A1,A2)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A1,A2)");
 
             FSharpTransformationRule T = new FSharpTransformationRule();
             T.from = T.ParseToTree("SUM({i,j}, {i,j+1})");
            
             T.to = T.ParseToTree("SUM({i,j}:{i,j+1})"); //hier heb je een gewone range met dt=ynamische cellen
 
-            FSharpTransform.Formula Result = T.ApplyOn(Original.Root);
-            ParseTreeNode Expected = (P.ParseToTree("SUM(A1,A2)")).Root;
+            FSharpTransform.Formula Result = T.ApplyOn(Original);
+            ParseTreeNode Expected = (ExcelFormulaParser.Parse("SUM(A1,A2)"));
 
             Assert.AreEqual("SUM(A1:A2)", T.Print(Result));
 
@@ -522,14 +513,14 @@ namespace TransformationTests
         [TestMethod]
         public void Merge_Some_Ranges()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A1,A2,A3)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A1,A2,A3)");
 
             FSharpTransformationRule S = new FSharpTransformationRule();
             S.from = S.ParseToTree("SUM({i,j}, {i,j+1}, {r})");
             S.to = S.ParseToTree("SUM({i,j}:{i,j+1}, {r})");
 
-            FSharpTransform.Formula Result = S.ApplyOn(Original.Root);
+            FSharpTransform.Formula Result = S.ApplyOn(Original);
 
             Assert.AreEqual("SUM(A1:A2,A3)", S.Print(Result));
         }
@@ -538,14 +529,14 @@ namespace TransformationTests
         [TestMethod]
         public void SUM_COUNT_AVERAGE()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A1:A5)/COUNT(A1:A5)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A1:A5)/COUNT(A1:A5)");
 
             FSharpTransformationRule S = new FSharpTransformationRule();
             S.from = S.ParseToTree("SUM({r})/COUNT({r})");
             S.to = S.ParseToTree("AVERAGE(A1:A5)");
 
-            FSharpTransform.Formula Result = S.ApplyOn(Original.Root);
+            FSharpTransform.Formula Result = S.ApplyOn(Original);
 
             Assert.AreEqual("AVERAGE(A1:A5)", S.Print(Result));
         }
@@ -556,7 +547,7 @@ namespace TransformationTests
         [TestMethod]
         public void Merge_Three_Ranges()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
+            
 
             FSharpTransformationRule R = new FSharpTransformationRule();
             R.from = R.ParseToTree("SUM({i,j}: {i,j+1}, {i,j+2})");
@@ -570,27 +561,27 @@ namespace TransformationTests
         [TestMethod]
         public void Repeat_Merge()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("SUM(A1,A2,A3,A4)");
+            
+            var Original = ExcelFormulaParser.Parse("SUM(A1,A2,A3,A4)");
 
             FSharpTransformationRule S1 = new FSharpTransformationRule();
             S1.from = S1.ParseToTree("SUM({i,j}, {i,j+1})");
             S1.to = S1.ParseToTree("SUM({i,j}:{i,j+1})");
 
-            Assert.AreEqual(false, S1.CanBeAppliedonBool(Original.Root));
+            Assert.AreEqual(false, S1.CanBeAppliedonBool(Original));
         }
 
         [TestMethod]
         public void Fancy_Merge()
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree Original = P.ParseToTree("(SUM(K3:K4,K5,K6,K7))/COUNT(K3:K7)");
+            
+            var Original = ExcelFormulaParser.Parse("(SUM(K3:K4,K5,K6,K7))/COUNT(K3:K7)");
 
             FSharpTransformationRule S1 = new FSharpTransformationRule();
             S1.from = S1.ParseToTree("SUM({x,y}: {i,j}, {i,j+1},[k])");
             S1.to = S1.ParseToTree("SUM({x,y}:{i,j+1},[k])");
 
-            Assert.AreEqual(true, S1.CanBeAppliedonBool(Original.Root));
+            Assert.AreEqual(true, S1.CanBeAppliedonBool(Original));
         }
 
 
@@ -639,11 +630,15 @@ namespace TransformationTests
         [TestMethod]
         public void If_error2()
         {
+            var Original = ExcelFormulaParser.Parse("IF(ISERROR(A1+A2+B1),\"Error\",A1+A2+B1)");
+
             FSharpTransformationRule S1 = new FSharpTransformationRule();
             S1.from = S1.ParseToTree("IF(ISERROR([d]),[c],[d])");
             S1.to = S1.ParseToTree("IFERROR([d],[c])");
 
-            Assert.AreEqual("IFERROR(A1+A2+B1,\"Error\")", S1.ApplyOn("IF(ISERROR(A1+A2+B1),\"Error\",A1+A2+B1)"));
+            Assert.IsTrue(S1.CanBeAppliedonBool(Original));
+
+            Assert.AreEqual("IFERROR(A1+A2+B1,\"Error\")", S1.ApplyOn(Original).Print());
         }
 
 

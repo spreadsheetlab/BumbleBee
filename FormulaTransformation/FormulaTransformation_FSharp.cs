@@ -1,12 +1,13 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using Irony.Parsing;
 using Infotron.Util;
 using Microsoft.FSharp.Collections;
-using Infotron.Parsing;
 using System.Diagnostics;
 using FSharpEngine;
+using XLParser;
 
 
 namespace Infotron.FSharpFormulaTransformation
@@ -18,14 +19,34 @@ namespace Infotron.FSharpFormulaTransformation
         public ParseTreeNode to;
         public double priority;
 
-        private readonly Lazy<FSharpTransform.Formula> fromFSharpTree;
-        private readonly Lazy<FSharpTransform.Formula> toFSharpTree;
-
+        // A lot of code does the initalization itself or with object initializers
         public FSharpTransformationRule()
         {
-            fromFSharpTree = new Lazy<FSharpTransform.Formula>(() => CreateFSharpTree(from));
-            toFSharpTree = new Lazy<FSharpTransform.Formula>(() => CreateFSharpTree(to));
         }
+
+        public FSharpTransformationRule(string Name, string from, string to, double priority = 0)
+        {
+            this.Name = Name;
+            this.from = ParseToTree(from);
+            this.to = ParseToTree(to);
+            this.priority = priority;
+
+            if (this.from == null)
+            {
+                throw new ArgumentException($"Could not parse \"{from}\"", nameof(from));
+            }
+            if (this.to == null)
+            {
+                throw new ArgumentException($"Could not parse \"{to}\"", nameof(to));
+            }
+
+
+        }
+
+        private FSharpTransform.Formula _fromFSharpTree;
+        private FSharpTransform.Formula _toFSharpTree;
+        private FSharpTransform.Formula fromFSharpTree => _fromFSharpTree ?? (_fromFSharpTree = CreateFSharpTree(from));
+        private FSharpTransform.Formula toFSharpTree => _toFSharpTree ?? (_toFSharpTree = CreateFSharpTree(to));
 
         public int CompareTo(FSharpTransformationRule y)
         {
@@ -47,32 +68,31 @@ namespace Infotron.FSharpFormulaTransformation
         /// </summary>
         public FSharpTransform.Formula CreateFSharpTree(ParseTreeNode input)
         {
-            return FSharpFormulaHelper.CreateFSharpTree(input);
+            return input.CreateFSharpTree();
         }
 
         public bool CanBeAppliedonBool(string formula)
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree source = P.ParseToTree(formula);
+            var source = ExcelFormulaParser.Parse(formula);
 
-            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
-            FSharpTransform.Formula FSource = CreateFSharpTree(source.Root);
+            var FFrom = fromFSharpTree;
+            var FSource = CreateFSharpTree(source);
 
             return FSharpTransform.CanBeAppliedonBool(FFrom, FSource);
         }
 
         public bool CanBeAppliedonBool(ParseTreeNode source)
         {
-            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
-            FSharpTransform.Formula FSource = CreateFSharpTree(source);
+            var FFrom = fromFSharpTree;
+            var FSource = CreateFSharpTree(source);
             
             return FSharpTransform.CanBeAppliedonBool(FFrom, FSource);
         }
 
         public FSharpMap<char, FSharpTransform.mapElement> CanBeAppliedonMap(ParseTreeNode source)
         {
-            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
-            FSharpTransform.Formula FSource = CreateFSharpTree(source);
+            var FFrom = fromFSharpTree;
+            var FSource = CreateFSharpTree(source);
 
             return FSharpTransform.CanBeAppliedonMap(FFrom, FSource);
         }
@@ -82,12 +102,11 @@ namespace Infotron.FSharpFormulaTransformation
         /// </summary>
         public string ApplyOn(string formula)
         {
-            ExcelFormulaParser P = new ExcelFormulaParser();
-            ParseTree source = P.ParseToTree(formula);
+            var source = ExcelFormulaParser.Parse(formula);
 
-            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
-            FSharpTransform.Formula FTo = toFSharpTree.Value;
-            FSharpTransform.Formula FSource = CreateFSharpTree(source.Root);
+            var FFrom = fromFSharpTree;
+            var FTo = toFSharpTree;
+            var FSource = CreateFSharpTree(source);
 
             var result = FSharpTransform.ApplyOn(FTo, FFrom, FSource);
 
@@ -99,9 +118,9 @@ namespace Infotron.FSharpFormulaTransformation
         /// </summary>
         public FSharpTransform.Formula ApplyOn(ParseTreeNode source)
         {
-            FSharpTransform.Formula FFrom = fromFSharpTree.Value;
-            FSharpTransform.Formula FTo = toFSharpTree.Value;
-            FSharpTransform.Formula FSource = CreateFSharpTree(source);
+            var FFrom = fromFSharpTree;
+            var FTo = toFSharpTree;
+            var FSource = CreateFSharpTree(source);
 
             var result = FSharpTransform.ApplyOn(FTo, FFrom, FSource);
 
@@ -113,7 +132,7 @@ namespace Infotron.FSharpFormulaTransformation
         /// </summary>
         public string Print(FSharpTransform.Formula result)
         {
-            return FSharpFormulaHelper.Print(result);
+            return result.Print();
         }
 
         

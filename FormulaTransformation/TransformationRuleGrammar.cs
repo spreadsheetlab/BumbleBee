@@ -8,6 +8,7 @@ using XLParser;
 
 namespace Infotron.FSharpFormulaTransformation
 {
+    // 0.2 - Based on XLParser
     [Language("Transformations", "0.2", "Grammar for Bumblebee transformation rules")]
     public class TransformationRuleGrammar : ExcelFormulaGrammar
     {
@@ -25,6 +26,8 @@ namespace Infotron.FSharpFormulaTransformation
 
             var LowLetter = new RegexBasedTerminal("LowLetter", "[a-z]");
 
+            var Disable = ToTerm("Disabled_rule_don't_type_this_and_if_you_do_you're_just_beginning_for_things_to_break", "disabled");
+
             #endregion
 
             #region 2-NonTerminals
@@ -40,22 +43,29 @@ namespace Infotron.FSharpFormulaTransformation
 
             VarExpression.Rule =
                 LowLetter
-                | comma
+                | Number
                 | VarExpression + InfixOp + VarExpression;
 
+            // Constant arrays have the same syntax as dynamic cells, so disable them
+            ConstantArray.Rule = Disable;
+            MarkTransient(ConstantArray);
             DynamicCell.Rule = OpenCurlyParen + VarExpression + comma + VarExpression + CloseCurlyParen;
 
-            DynamicConstant.Rule = "[" + LowLetter + "]";
+
+            // Structured references have the same syntax as dynamic constants, so disable them
+            StructureReference.Rule = Disable;
+            MarkTransient(StructureReference);
+            DynamicConstant.Rule = EnclosedInBracketsToken;
 
             DynamicRange.Rule = OpenCurlyParen + LowLetter + CloseCurlyParen;
 
-            Cell.Rule =
-                base.Cell.Rule
-                | DynamicCell;
+            // This solves reduce-reduce conflicts with multiple disabled rules
+            var Disabled = new NonTerminal("DISABLED", Disable + ReduceHere());
+            MarkTransient(Disabled);
 
-            Constant.Rule =
-                base.Formula.Rule
-                | DynamicConstant;
+            Reference.Rule = Reference.Rule | DynamicRange | DynamicCell | Disabled;
+
+            Formula.Rule = Formula.Rule | DynamicConstant;
 
             #endregion
         }

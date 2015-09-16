@@ -73,13 +73,7 @@ namespace BumbleBee
                     double prio = ((Range)rules.Cells.Item[i, 3]).Value;
                     string Name = ((Range)rules.Cells.Item[i, 4]).Value;
 
-                    FSharpTransformationRule S = new FSharpTransformationRule();
-                    S.@from = S.ParseToTree(From);
-                    S.to = S.ParseToTree(To);
-                    S.priority = prio;
-                    S.Name = Name;
-
-                    AllTransformations.Add(S);
+                    AllTransformations.Add(new FSharpTransformationRule(Name, From, To, prio));
 
                 }
             }

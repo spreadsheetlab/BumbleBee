@@ -261,8 +261,8 @@
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
-    <Reference Include="XLParser, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\XLParser.1.1.4\lib\net45\XLParser.dll</HintPath>
+    <Reference Include="XLParser, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\XLParser.1.2.0\lib\net45\XLParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="yFilesAdapter">

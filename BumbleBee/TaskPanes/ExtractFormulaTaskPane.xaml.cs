@@ -182,7 +182,7 @@ namespace BumbleBee.TaskPanes
                     NewCellAddress = new Location(value) {RowFixed = true, ColumnFixed = true};
                     fixedAddressValid = true;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     fixedAddressValid = false;
                     throw;
@@ -221,7 +221,7 @@ namespace BumbleBee.TaskPanes
                         var f = orFormula.Ctx.Parse(value);
                         if (!orFormula.Contains(f))
                         {
-                            throw new ArgumentException("Original formula does not contain subformula.", "value");
+                            throw new ArgumentException("Original formula does not contain subformula.", nameof(value));
                         }
                         Formula = f;
                     }
@@ -233,7 +233,7 @@ namespace BumbleBee.TaskPanes
                     OnPropertyChanged("Formula");
                     OnPropertyChanged("FormulaStr");
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     formulaValid = false;
                     throw;
