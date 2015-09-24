@@ -81,10 +81,6 @@
     <Reference Include="EPPlus">
       <HintPath>..\packages\PerfectXL.Dependencies.0.8.0\lib\EPPlus.dll</HintPath>
     </Reference>
-    <Reference Include="FormulaParser, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\PerfectXLCore.0.7.5.0\lib\net45\FormulaParser.dll</HintPath>
-    </Reference>
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="GemBox.Spreadsheet">
       <HintPath>..\packages\PerfectXL.Dependencies.0.8.0\lib\GemBox.Spreadsheet.dll</HintPath>
@@ -128,7 +124,7 @@
       <HintPath>..\packages\PerfectXLCore.0.7.5.0\lib\net45\Util.dll</HintPath>
     </Reference>
     <Reference Include="XLParser, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\XLParser.1.2.0\lib\net45\XLParser.dll</HintPath>
+      <HintPath>..\packages\XLParser.1.2.1-alpha\lib\net45\XLParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="yFilesAdapter">

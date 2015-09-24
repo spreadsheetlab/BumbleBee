@@ -124,7 +124,7 @@
       <HintPath>..\packages\PerfectXLCore.0.7.5.0\lib\net45\Util.dll</HintPath>
     </Reference>
     <Reference Include="XLParser, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\XLParser.1.2.0\lib\net45\XLParser.dll</HintPath>
+      <HintPath>..\packages\XLParser.1.2.1-alpha\lib\net45\XLParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="yFilesAdapter">

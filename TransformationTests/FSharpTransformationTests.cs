@@ -503,8 +503,9 @@ namespace TransformationTests
            
             T.to = T.ParseToTree("SUM({i,j}:{i,j+1})"); //hier heb je een gewone range met dt=ynamische cellen
 
+
+            Assert.IsTrue(T.CanBeAppliedonBool(Original));
             FSharpTransform.Formula Result = T.ApplyOn(Original);
-            ParseTreeNode Expected = (ExcelFormulaParser.Parse("SUM(A1,A2)"));
 
             Assert.AreEqual("SUM(A1:A2)", T.Print(Result));
 
@@ -547,8 +548,6 @@ namespace TransformationTests
         [TestMethod]
         public void Merge_Three_Ranges()
         {
-            
-
             FSharpTransformationRule R = new FSharpTransformationRule();
             R.from = R.ParseToTree("SUM({i,j}: {i,j+1}, {i,j+2})");
             R.to = R.ParseToTree("SUM({i,j}:{i,j+2})");
@@ -624,7 +623,9 @@ namespace TransformationTests
             S1.from = S1.ParseToTree("IF(ISERROR({r}),[c],{r})");
             S1.to = S1.ParseToTree("IFERROR({r},[c])");
 
-            Assert.AreEqual("IFERROR(B2,\"Error\")", S1.ApplyOn("IF(ISERROR(B2),\"Error\",B2)"));
+            var Result = S1.ApplyOn("IF(ISERROR(B2),\"Error\",B2)");
+
+            Assert.AreEqual("IFERROR(B2,\"Error\")", Result);
         }
 
         [TestMethod]

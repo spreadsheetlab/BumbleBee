@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FSharpEngine;
-using Infotron.Parsing;
+using XLParser;
 using Infotron.FSharpFormulaTransformation;
 
 namespace TransformationTests
@@ -13,7 +13,6 @@ namespace TransformationTests
     [TestClass]
     public class FSharpASTReplacementTests
     {
-        private readonly ExcelFormulaParser P = new ExcelFormulaParser();
         private readonly FSharpTransformationRule T = new FSharpTransformationRule();
 
         [TestMethod]
@@ -78,10 +77,10 @@ namespace TransformationTests
 
         private void TestReplace(string subject, string replace, string replacement, string expected)
         {
-            var Fsub = T.CreateFSharpTree(P.ParseToTree(subject).Root);
-            var Frep = T.CreateFSharpTree(P.ParseToTree(replace).Root);
-            var Frepmnt = T.CreateFSharpTree(P.ParseToTree(replacement).Root);
-            var Fexp = T.CreateFSharpTree(P.ParseToTree(expected).Root);
+            var Fsub = T.CreateFSharpTree(ExcelFormulaParser.ParseToTree(subject).Root);
+            var Frep = T.CreateFSharpTree(ExcelFormulaParser.ParseToTree(replace).Root);
+            var Frepmnt = T.CreateFSharpTree(ExcelFormulaParser.ParseToTree(replacement).Root);
+            var Fexp = T.CreateFSharpTree(ExcelFormulaParser.ParseToTree(expected).Root);
 
             var result = Fsub.ReplaceSubTree(Frep, Frepmnt);
 

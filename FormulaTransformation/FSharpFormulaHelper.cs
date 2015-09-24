@@ -81,8 +81,10 @@ namespace Infotron.FSharpFormulaTransformation
                     return FSharpTransform.makeDRange(letter);
                 case GrammarNames.Constant:
                 case GrammarNames.Number:
+                case GrammarNames.Text:
                 case GrammarNames.Bool:
                 case GrammarNames.Error:
+                case GrammarNames.RefError:
                     return FSharpTransform.makeConstant(input.Print());
                 case TransformationRuleGrammar.Names.DynamicConstant:
                     return FSharpTransform.makeDArgument(input.ChildNodes[0].Token.ValueString[1]);
@@ -126,7 +128,7 @@ namespace Infotron.FSharpFormulaTransformation
 
         private static FSharpTransform.SuperCell GetDynamicCell(ParseTreeNode input)
         {
-            ParseTreeNode DynamicCell = input;
+            ParseTreeNode DynamicCell = input.SkipToRelevant();
 
             ParseTreeNode VarExpression1 = DynamicCell.ChildNodes[0];
             ParseTreeNode VarExpression2 = DynamicCell.ChildNodes[2];
@@ -137,7 +139,7 @@ namespace Infotron.FSharpFormulaTransformation
             char Var4;
 
             if (VarExpression1.ChildNodes.Count == 1) {
-                Var1 = VarExpression1.ChildNodes.First().Token.ValueString[0];
+                Var1 = Print(VarExpression1.ChildNodes[0])[0];
                 Var2 = '0';
             } else {
                 Var1 = Print(VarExpression1.ChildNodes[0])[0];
@@ -145,7 +147,7 @@ namespace Infotron.FSharpFormulaTransformation
             }
 
             if (VarExpression2.ChildNodes.Count == 1) {
-                Var3 = VarExpression2.ChildNodes.First().Token.ValueString[0];
+                Var3 = Print(VarExpression2.ChildNodes[0])[0];
                 Var4 = '0';
             } else {
                 Var3 = Print(VarExpression2.ChildNodes[0])[0];
@@ -163,7 +165,7 @@ namespace Infotron.FSharpFormulaTransformation
         {
             if (node.Term is Terminal)
             {
-                return node.Token.ValueString;
+                return ExcelFormulaParser.Print(node);
             }
 
             switch (node.Type())
@@ -174,7 +176,7 @@ namespace Infotron.FSharpFormulaTransformation
                 case TransformationRuleGrammar.Names.DynamicRange:
                     return string.Join("", node.ChildNodes);
                 default:
-                    return ExcelFormulaParser.Print(node);
+                    return ExcelFormulaParser.Print(node, Print);
             }
         }
 
