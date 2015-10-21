@@ -21,11 +21,11 @@ namespace BumbleBee
 
         private readonly List<RefactorMenuItem> contextMenuRefactorings = new List<BBMenuRefactorings.RefactorMenuItem>
         {
-            new BBMenuRefactorings.RefactorMenuItem {MenuText="+ to SUM",Refactoring=new OpToAggregate()},
-            new BBMenuRefactorings.RefactorMenuItem {MenuText="SUM to SUMIF", Refactoring=new GroupReferences()},
-            new BBMenuRefactorings.RefactorMenuItem {MenuText="Group References", Refactoring=new GroupReferences(), NewGroup = true},
-            new BBMenuRefactorings.RefactorMenuItem {MenuText="Inline Formula", Refactoring=new InlineFormula(), NewGroup = true},
-            new BBMenuRefactorings.RefactorMenuItem {MenuText="Extract Formula", Refactoring=new ExtractFormulaMenuStub()},
+            new RefactorMenuItem {MenuText="Change to SUM or SUMIF",Refactoring=new OpToAggregate()},
+            new RefactorMenuItem {MenuText="Group References", Refactoring=new GroupReferences(), NewGroup = true},
+            new RefactorMenuItem {MenuText="Extract Formula", Refactoring=new ExtractFormulaMenuStub(), NewGroup = true},
+            new RefactorMenuItem {MenuText="Inline Formula", Refactoring=new InlineFormula()},
+            new RefactorMenuItem {MenuText="Introduce Cell Name", Refactoring = new GroupReferences(), NewGroup = true },
         };
 
         public BBMenuRefactorings(BBAddIn addIn)
