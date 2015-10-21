@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Infotron.FSharpFormulaTransformation;
-using Microsoft.Office.Interop.Excel;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
+//using Microsoft.Office.Interop.Excel;
 using Microsoft.Office.Tools.Ribbon;
 
 namespace BumbleBee
@@ -40,7 +42,7 @@ namespace BumbleBee
         public void startsTransformationRules()
         {
             //initialize transformations
-            Microsoft.Office.Interop.Excel.Worksheet Sheet = addIn.GetWorksheetByName("_bumblebeerules");
+            Excel.Worksheet Sheet = addIn.GetWorksheetByName("_bumblebeerules");
             if (Sheet == null)
             {
                 addIn.theRibbon.groupInitialize.Visible = true;
@@ -57,7 +59,7 @@ namespace BumbleBee
             readTransformationRules(Sheet);
         }
 
-        private void readTransformationRules(Microsoft.Office.Interop.Excel.Worksheet rules)
+        private void readTransformationRules(Excel.Worksheet rules)
         {
             //find last filled cells
             int Lower = 50;
@@ -66,12 +68,12 @@ namespace BumbleBee
 
             for (int i = 1; i <= Lower; i++)
             {
-                string From = ((Range)rules.Cells.Item[i, 1]).Value;
+                string From = (string)rules.Cells[i, 1].Value;
                 if (From != null)
                 {
-                    string To = ((Range)rules.Cells.Item[i, 2]).Value;
-                    double prio = ((Range)rules.Cells.Item[i, 3]).Value;
-                    string Name = ((Range)rules.Cells.Item[i, 4]).Value;
+                    string To = (string)rules.Cells[i, 2].Value;
+                    double prio = (double)rules.Cells[i, 3].Value;
+                    string Name = (string)rules.Cells[i, 4].Value;
 
                     AllTransformations.Add(new FSharpTransformationRule(Name, From, To, prio));
 
@@ -89,7 +91,7 @@ namespace BumbleBee
 
             addIn.bbTransformations.clearTransformationsRibbon(addIn);
             //Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
-            Range selectedRange = ((Range) addIn.Application.Selection);
+            Excel.Range selectedRange = addIn.Application.Selection;
             Range selectedCell = (Range)selectedRange.Item[1, 1];
             string Formula = selectedCell.Formula;
 
@@ -121,17 +123,17 @@ namespace BumbleBee
             }
         }
 
-        private string getValue(Range cell, string formula)
+        private string getValue(Excel.Range cell, string formula)
         {
             string value;
-            string currentFormula = cell.Formula;
+            string currentFormula = (string)cell.Formula;
             cell.Formula = "=" + formula;
             value = cell.Value.ToString();
             cell.Formula = currentFormula;
             return value;
         }
 
-        private bool valueChanges(Range cell, string formula)
+        private bool valueChanges(Excel.Range cell, string formula)
         {
             return getValue(cell, formula) != cell.Value.ToString();
         }

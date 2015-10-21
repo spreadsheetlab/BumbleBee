@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-using Excel = Microsoft.Office.Interop.Excel;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
 using Office = Microsoft.Office.Core;
 using Microsoft.Office.Tools.Excel;
 using Microsoft.Office.Tools.Ribbon;
@@ -16,14 +17,12 @@ using PerfectXL.Domain.Observation;
 using Infotron.PerfectXL.SmellAnalyzer.SmellAnalyzer;
 using System.Drawing;
 using Infotron.PerfectXL.DataModel;
-using Microsoft.Office.Interop.Excel;
 using System.Windows.Forms;
 using BumbleBee.Refactorings;
 using BumbleBee.TaskPanes;
 using Infotron.Parsing;
 using FSharpEngine;
 using Irony.Parsing;
-using Microsoft.Office.Tools;
 
 namespace BumbleBee
 {
@@ -80,6 +79,7 @@ namespace BumbleBee
 
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
+
             bbColorSmells = new BBColorSmells(this);
             bbTransformations = new BBTransformations(this);
             bbMenuRefactorings = new BBMenuRefactorings(this);
@@ -95,7 +95,7 @@ namespace BumbleBee
         }
 
 
-        void Application_WorkbookOpen(Excel.Workbook Wb)
+        void Application_WorkbookOpen(ExcelRaw.Workbook Wb)
         {
             InitializeBB();
         }
@@ -109,15 +109,15 @@ namespace BumbleBee
         /// the contents of this method with the code editor.
         /// </summary>
         private void InternalStartup()
-        {    
+        {
             this.Startup += new EventHandler(ThisAddIn_Startup);
-            Application.WorkbookOpen += new Excel.AppEvents_WorkbookOpenEventHandler(Application_WorkbookOpen);
-            Application.SheetSelectionChange += new Excel.AppEvents_SheetSelectionChangeEventHandler(Application_SheetSelectionChange);
-            Application.WorkbookAfterSave += new Excel.AppEvents_WorkbookAfterSaveEventHandler(Application_WorkbookAfterSave);
+            Application.WorkbookOpen += new ExcelRaw.AppEvents_WorkbookOpenEventHandler(Application_WorkbookOpen);
+            Application.SheetSelectionChange += new ExcelRaw.AppEvents_SheetSelectionChangeEventHandler(Application_SheetSelectionChange);
+            Application.WorkbookAfterSave += new ExcelRaw.AppEvents_WorkbookAfterSaveEventHandler(Application_WorkbookAfterSave);
         }
         #endregion
 
-        void Application_SheetSelectionChange(object Sh, Excel.Range Target)
+        void Application_SheetSelectionChange(object Sh, ExcelRaw.Range Target)
         {
             bbTransformations.clearTransformationsRibbon(this);
         }
