@@ -92,10 +92,10 @@ namespace BumbleBee
             addIn.bbTransformations.clearTransformationsRibbon(addIn);
             //Excel.Worksheet activeWorksheet = ((Excel.Worksheet)Application.ActiveSheet);
             Excel.Range selectedRange = addIn.Application.Selection;
-            Range selectedCell = (Range)selectedRange.Item[1, 1];
-            string Formula = selectedCell.Formula;
+            Excel.Range selectedCell = selectedRange[1, 1];
+            string Formula = (string)selectedCell.Formula;
 
-            if (selectedCell.HasFormula && Formula.Length > 0)
+            if ((bool)selectedCell.HasFormula && Formula.Length > 0)
             {
                 Formula = RemoveFirstSymbol(Formula);
 
@@ -123,7 +123,7 @@ namespace BumbleBee
             }
         }
 
-        private string getValue(Excel.Range cell, string formula)
+        private string getValue(ExcelRaw.Range cell, string formula)
         {
             string value;
             string currentFormula = (string)cell.Formula;
@@ -133,7 +133,7 @@ namespace BumbleBee
             return value;
         }
 
-        private bool valueChanges(Excel.Range cell, string formula)
+        private bool valueChanges(ExcelRaw.Range cell, string formula)
         {
             return getValue(cell, formula) != cell.Value.ToString();
         }
@@ -161,7 +161,7 @@ namespace BumbleBee
                     applyInRange(T, addIn.Application.ActiveSheet.UsedRange);
                     break;
                 case ApplyTo.Workbook:
-                    foreach (Microsoft.Office.Interop.Excel.Worksheet worksheet in addIn.Application.Worksheets)
+                    foreach (ExcelRaw.Worksheet worksheet in addIn.Application.Worksheets)
                     {
                         applyInRange(T, worksheet.UsedRange);
                     }
@@ -173,13 +173,13 @@ namespace BumbleBee
             addIn.bbTransformations.MakePreview(addIn);
         }
 
-        private void applyInRange(FSharpTransformationRule T, Microsoft.Office.Interop.Excel.Range Range, Boolean previewOnly = false)
+        private void applyInRange(FSharpTransformationRule T, ExcelRaw.Range Range, bool previewOnly = false)
         {
-            foreach (Microsoft.Office.Interop.Excel.Range cell in Range.Cells)
+            foreach (ExcelRaw.Range cell in Range.Cells)
             {
-                if (cell.HasFormula)
+                if ((bool)cell.HasFormula)
                 {
-                    var Formula = RemoveFirstSymbol(cell.Formula);
+                    var Formula = RemoveFirstSymbol((string)cell.Formula);
                     if (T.CanBeAppliedonBool(Formula))
                     {
                         if (previewOnly)
@@ -243,17 +243,17 @@ namespace BumbleBee
             {
                 FSharpTransformationRule T = AllTransformations.FirstOrDefault(x => x.Name == addIn.theRibbon.dropDown1.SelectedItem.Label);
 
-                Microsoft.Office.Interop.Excel.Range R = ((Microsoft.Office.Interop.Excel.Range) addIn.Application.Selection);
-                string formula = BBTransformations.RemoveFirstSymbol(R.Item[1, 1].Formula);
+                Excel.Range R = (addIn.Application.Selection);
+                string formula = BBTransformations.RemoveFirstSymbol((string)R[1, 1].Formula);
                 addIn.theRibbon.Preview.Text = T.ApplyOn(formula);
-                addIn.theRibbon.valuePreview.Text = getValue(R.Item[1, 1], addIn.theRibbon.Preview.Text);
-                addIn.theRibbon.valuePreview.ShowImage = (addIn.theRibbon.valuePreview.Text != R.Item[1, 1].Value.ToString());
+                addIn.theRibbon.valuePreview.Text = getValue((ExcelRaw.Range)R[1, 1].UnderlyingObject, addIn.theRibbon.Preview.Text);
+                addIn.theRibbon.valuePreview.ShowImage = (addIn.theRibbon.valuePreview.Text != R[1, 1].Value.ToString());
 
                 if (R.Count == 1)
                 {
-                    foreach (Microsoft.Office.Interop.Excel.Worksheet worksheet in addIn.Application.Worksheets)
+                    foreach (Excel.Worksheet worksheet in addIn.Application.Worksheets)
                     {
-                        applyInRange(T, worksheet.UsedRange, true);
+                        applyInRange(T, (ExcelRaw.Range)worksheet.UsedRange.UnderlyingObject, true);
                     }
                 }
                 else

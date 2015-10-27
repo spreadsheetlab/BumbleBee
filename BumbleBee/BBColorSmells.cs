@@ -10,7 +10,8 @@ using Infotron.PerfectXL.SmellAnalyzer;
 using Infotron.PerfectXL.SmellAnalyzer.SmellAnalyzer;
 using Microsoft.Office.Tools.Ribbon;
 using PerfectXL.Domain.Observation;
-using Microsoft.Office.Interop.Excel;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
 
 namespace BumbleBee
 {
@@ -142,12 +143,12 @@ namespace BumbleBee
 
     public class HighlightedCell
     {
-        public Range Cell;
+        public ExcelRaw.Range Cell;
         public object OriginalPattern;
         public object OriginalColor;
         public object OriginalComment;
 
-        public HighlightedCell(Range cell,
+        public HighlightedCell(ExcelRaw.Range cell,
             object originalPattern,
             object originalColor,
             object originalComment = null)
@@ -155,7 +156,7 @@ namespace BumbleBee
             Cell = cell;
             OriginalPattern = originalPattern;
             OriginalColor = originalColor;
-            OriginalComment = (originalComment as Comment)?.Text();
+            OriginalComment = (originalComment as ExcelRaw.Comment)?.Text();
         }
 
         public void Reset()
@@ -168,7 +169,7 @@ namespace BumbleBee
 
         public void Apply(Smell smell)
         {
-            Cell.Interior.Pattern = XlPattern.xlPatternSolid;
+            Cell.Interior.Pattern = ExcelRaw.XlPattern.xlPatternSolid;
             Cell.Interior.Color = ColorTranslator.ToOle(Color.Red);
 
             var existingComment = "";
