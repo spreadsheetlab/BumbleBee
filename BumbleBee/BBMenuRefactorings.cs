@@ -25,7 +25,7 @@ namespace BumbleBee
             new RefactorMenuItem {MenuText="Group References", Refactoring=new GroupReferences(), NewGroup = true},
             new RefactorMenuItem {MenuText="Extract Formula", Refactoring=new ExtractFormulaMenuStub(), NewGroup = true},
             new RefactorMenuItem {MenuText="Inline Formula", Refactoring=new InlineFormula()},
-            new RefactorMenuItem {MenuText="Introduce Cell Name", Refactoring = new GroupReferences(), NewGroup = true },
+            new RefactorMenuItem {MenuText="Introduce Cell Name", Refactoring = new IntroduceCellName(), NewGroup = true },
         };
 
         public BBMenuRefactorings(BBAddIn addIn)

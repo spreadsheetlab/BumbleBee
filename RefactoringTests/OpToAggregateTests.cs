@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using BumbleBee.Refactorings;
 using BumbleBee.Refactorings.Util;
-using Infotron.Parsing;
+using XLParser;
 
 namespace RefactoringTests
 {

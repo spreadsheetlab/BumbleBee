@@ -4,8 +4,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using BumbleBee.Refactorings.Util;
 using Microsoft.Office.Interop.Excel;
-using Infotron.Parsing;
-//using XLParser;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
+using XLParser;
 
 namespace BumbleBee.Refactorings
 {
@@ -48,15 +49,19 @@ namespace BumbleBee.Refactorings
             get { return RangeShape.Flags.NonEmpty; }
         }
 
-        private static void RefactorSingle(Range toInline, Context toInlineCtx)
+        internal static void RefactorSingle(Range toInline, Context toInlineCtx, ContextNode toInlineAST = null)
         {
+            // If no AST to inline is provided, inline the toInline AST
+            toInlineAST = toInlineAST ?? Helper.ParseCtx(toInline, toInlineCtx);
+
+            // Gather dependencies
             var dependencies = GetAllDirectDependents(toInline);
             if (dependencies.Count == 0)
             {
                 throw new InvalidOperationException(String.Format("Cell {0} has no dependencies", toInline.SheetAndAddress()));
             }
 
-            var toInlineAST = Helper.ParseCtx(toInline, toInlineCtx);
+            
             //MessageBox.Show(toInlineFormula);
             var toInlineAddress = Helper.ParseCtx(toInline.Address[false, false], toInlineCtx);
 
@@ -136,7 +141,7 @@ namespace BumbleBee.Refactorings
         /// Based on https://colinlegg.wordpress.com/2014/01/14/vba-determine-all-precedent-cells-a-nice-example-of-recursion/.
         /// </remarks>
         /// <returns>All dependent cells as a collection of ranges</returns>
-        private static ICollection<Range> GetAllDirectDependents(Range cell)
+        internal static ICollection<Range> GetAllDirectDependents(Range cell)
         {
             if (cell.Count > 1)
             {

@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Caching;
 using System.Text.RegularExpressions;
-using Infotron.Parsing;
+using XLParser;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
 
 namespace BumbleBee.Refactorings.Util
 {
@@ -22,7 +24,7 @@ namespace BumbleBee.Refactorings.Util
             return r.Count == 0;
         }
 
-        private static bool UseParseCache { get { return true; }}
+        private static bool UseParseCache => true;
 
         // TODO: Replace with R1C1 cache and move references depending on memory usage and speed
         private static readonly ObjectCache formulaCache = UseParseCache ? new MemoryCache("FormulaCache") : null;
@@ -34,7 +36,7 @@ namespace BumbleBee.Refactorings.Util
                 return (ParseTreeNode) formulaCache.Get(formula);
             }
 
-            var parsed = ExcelFormulaParser.Instance.ParseToTree(formula).Root;
+            var parsed = ExcelFormulaParser.Parse(formula);
             if (UseParseCache)
             {
                 formulaCache.Add(formula, parsed, new CacheItemPolicy());

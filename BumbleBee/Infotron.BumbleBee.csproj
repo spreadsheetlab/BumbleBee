@@ -279,7 +279,7 @@
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
     <Reference Include="XLParser, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\XLParser.1.2.0\lib\net45\XLParser.dll</HintPath>
+      <HintPath>..\packages\XLParser.1.2.1\lib\net45\XLParser.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="yFilesAdapter">
@@ -327,10 +327,12 @@
     <Compile Include="Refactorings\GroupReferences.cs" />
     <Compile Include="Refactorings\IntroduceCellName.cs" />
     <Compile Include="Refactorings\NotImplementedRefactoring.cs" />
+    <Compile Include="Refactorings\Util\ContextNode.cs" />
     <Compile Include="Refactorings\Util\Helper.cs" />
     <Compile Include="Refactorings\InlineFormula.cs" />
     <Compile Include="Refactorings\IRefactoring.cs" />
     <Compile Include="Refactorings\OpToAggregate.cs" />
+    <Compile Include="Refactorings\Util\ParserSheetReference.cs" />
     <Compile Include="Refactorings\Util\RangeShape.cs" />
     <Compile Include="TaskPanes\ExtractFormulaTaskPane.xaml.cs">
       <DependentUpon>ExtractFormulaTaskPane.xaml</DependentUpon>
