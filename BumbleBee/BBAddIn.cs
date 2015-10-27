@@ -63,10 +63,10 @@ namespace BumbleBee
             file.Close();
         }
 
-        public Excel.Worksheet GetWorksheetByName(string name)
+        public ExcelRaw.Worksheet GetWorksheetByName(string name)
         {
             return Application.Worksheets
-                .Cast<Excel.Worksheet>()
+                .Cast<ExcelRaw.Worksheet>()
                 .FirstOrDefault(worksheet => worksheet.Name == name);
         }
 

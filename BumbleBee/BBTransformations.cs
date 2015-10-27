@@ -42,7 +42,7 @@ namespace BumbleBee
         public void startsTransformationRules()
         {
             //initialize transformations
-            Excel.Worksheet Sheet = addIn.GetWorksheetByName("_bumblebeerules");
+            ExcelRaw.Worksheet Sheet = addIn.GetWorksheetByName("_bumblebeerules");
             if (Sheet == null)
             {
                 addIn.theRibbon.groupInitialize.Visible = true;
@@ -59,7 +59,7 @@ namespace BumbleBee
             readTransformationRules(Sheet);
         }
 
-        private void readTransformationRules(Excel.Worksheet rules)
+        private void readTransformationRules(ExcelRaw.Worksheet rules)
         {
             //find last filled cells
             int Lower = 50;
