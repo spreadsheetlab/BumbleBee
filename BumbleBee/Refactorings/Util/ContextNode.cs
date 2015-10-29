@@ -58,7 +58,9 @@ namespace BumbleBee.Refactorings.Util
             if (subject.ChildNodes.Count == 0) return subject;
 
             var newChilds = subject.ChildNodes.Select(pt => Replace(pt, search, replace, csub, csearch, crepl));
-            return CustomParseTreeNode.From(subject).SetChildNodes(newChilds);
+            var replacement = CustomParseTreeNode.From(subject);
+            replacement.SetChildNodes(newChilds);
+            return replacement;
         }
 
         /// <summary>
@@ -199,7 +201,7 @@ namespace BumbleBee.Refactorings.Util
 
         private static IEnumerable<ParseTreeNode> CellContainedInRanges(ParseTreeNode fqcellref, ContextNode formula)
         {
-            if (!fqcellref.Is(GrammarNames.Reference) || !fqcellref.ChildNodes[1].ChildNodes[0].Is(GrammarNames.Cell))
+            if (!fqcellref.Is(GrammarNames.Reference) || !fqcellref.ChildNodes[1].Is(GrammarNames.Cell))
             {
                 throw new ArgumentException("Must be a reference to a single cell", nameof(fqcellref));
             }
@@ -208,7 +210,7 @@ namespace BumbleBee.Refactorings.Util
 
         private static IEnumerable<ParseTreeNode> CellContainedInRanges(ParseTreeNode fqcellref, ParseTreeNode formula, Context CtxF)
         {
-            var cell = new Location(fqcellref.ChildNodes[1].ChildNodes[0].ChildNodes[0].Token.ValueString);
+            var cell = new Location(fqcellref.ChildNodes[1].Print());
             return 
                 // Select all  references
                 formula.GetReferenceNodes()
@@ -315,11 +317,16 @@ namespace BumbleBee.Refactorings.Util
             if (!isPrefixableReference(reference)) return reference;
 
             var referenced = reference.ChildNodes.First(node => !node.Is(GrammarNames.Prefix));
+            bool hasPrefix = reference.ChildNodes.Any(node => node.Is(GrammarNames.Prefix));
             var prefix = reference.FirstOrNewChild(CustomParseTreeNode.NonTerminal(GrammarNames.Prefix));
 
-            var prefixinfo = prefix.GetPrefixInfo();
+            PrefixInfo prefixinfo = null;
+            if (hasPrefix)
+            {
+                prefixinfo = prefix.GetPrefixInfo();
+            }
 
-            var file = prefix.FirstOrNewChild(CustomParseTreeNode.NonTerminal(GrammarNames.File, GrammarNames.TokenEnclosedInBrackets, DefinedIn.FileName));
+            var file = prefix.FirstOrNewChild(CustomParseTreeNode.NonTerminal(GrammarNames.File, GrammarNames.TokenEnclosedInBrackets, $"[{DefinedIn.FileName}]"));
             var sheet = prefix.FirstOrNewChild(CustomParseTreeNode.Terminal(GrammarNames.TokenSheet, DefinedIn.Worksheet));
 
             // Named ranges can be both workbook-level and sheet-level and need additional logic
@@ -328,13 +335,13 @@ namespace BumbleBee.Refactorings.Util
                 var name = referenced.ChildNodes.First().ChildNodes.First().Token.ValueString;
 
                 // If a sheet was already provided, either the file was provided or will correctly be filled by definition above
-                if (!prefixinfo.HasSheet)
+                if (!(prefixinfo != null && prefixinfo.HasSheet))
                 {
                     bool isDefinedOnSheetLevel = NamedRanges.Contains(new NamedRangeDef(DefinedIn, name));
                     // If a file was provided but no sheet, it's a workbook-level definition
                     // If a sheet-level name is not defined, either a workbook-level name is defined,
                     //   or it's not defined and we assume the Excel default of workbook-level
-                    if (prefixinfo.HasFile || !isDefinedOnSheetLevel)
+                    if ((prefixinfo != null && prefixinfo.HasFile) || !isDefinedOnSheetLevel)
                     {
                         sheet = CustomParseTreeNode.Terminal(GrammarNames.TokenSheet, "");
                     }

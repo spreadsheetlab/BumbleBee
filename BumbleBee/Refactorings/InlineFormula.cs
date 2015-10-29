@@ -12,6 +12,11 @@ namespace BumbleBee.Refactorings
 {
     public class InlineFormula : RangeRefactoring
     {
+        #if DEBUG
+            private static readonly bool DEBUG = true;
+        #else
+            private static readonly bool DEBUG = false;
+        #endif
 
         /// <summary>
         /// Inline all cells in a range into their dependents
@@ -32,7 +37,8 @@ namespace BumbleBee.Refactorings
                             RefactorSingle(cell, ctx);
                         }
                     }
-                    catch (Exception e)
+                    
+                    catch (Exception e) when(!DEBUG)
                     {
                         errors.Add(e);
                     }
@@ -44,10 +50,7 @@ namespace BumbleBee.Refactorings
             }
         }
 
-        protected override RangeShape.Flags AppliesTo
-        {
-            get { return RangeShape.Flags.NonEmpty; }
-        }
+        protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
 
         internal static void RefactorSingle(Range toInline, Context toInlineCtx, ContextNode toInlineAST = null)
         {
@@ -58,7 +61,7 @@ namespace BumbleBee.Refactorings
             var dependencies = GetAllDirectDependents(toInline);
             if (dependencies.Count == 0)
             {
-                throw new InvalidOperationException(String.Format("Cell {0} has no dependencies", toInline.SheetAndAddress()));
+                throw new InvalidOperationException($"Cell {toInline.SheetAndAddress()} has no dependencies");
             }
 
             
@@ -74,8 +77,7 @@ namespace BumbleBee.Refactorings
                     var dependentAST = Helper.ParseCtx(dependent);
                     if (dependentAST.Node == null)
                     {
-                        throw new InvalidOperationException(String.Format("Could not parse formula of {0}",
-                            dependent.SheetAndAddress()));
+                        throw new InvalidOperationException($"Could not parse formula of {dependent.SheetAndAddress()}");
                     }
                     // Check if the dependent has the cell in a range
                     //var ranges = RefactoringHelper.ContainsCellInRanges(toInlineAddress, dependentAST);
@@ -104,11 +106,18 @@ namespace BumbleBee.Refactorings
                     // In case the above error conditions fail
                     if (!dependentAST.Contains(toInlineAddress))
                     {
-                        throw new InvalidOperationException(String.Format("{1} refers to cell {0}, but it is unknown how.",dependent.SheetAndAddress(), toInline.Address[false,false]));
+                        throw new InvalidOperationException(string.Format("{1} refers to cell {0}, but it is unknown how.",dependent.SheetAndAddress(), toInline.Address[false,false]));
                     }
 
                     var newFormula = dependentAST.Replace(toInlineAddress, toInlineAST);
-                    dependent.Formula = "=" + newFormula.Print();
+                    try
+                    {
+                        dependent.Formula = "=" + newFormula.Print();
+                    }
+                    catch (COMException e)
+                    {
+                        throw new InvalidOperationException($"Refactoring produced invalid formula '={newFormula.Print()}' from original formula '{dependentAST.Print()}' for cell {dependent.SheetAndAddress()}", e);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -177,16 +186,10 @@ namespace BumbleBee.Refactorings
                         }
                         // If you want to extend this to transitive dependencies, don't forget to do some circular reference detection
                     }
-                    catch (COMException e)
+                    catch (COMException e) when (e.Message == "NavigateArrow method of Range class failed")
                     {
-                        if (e.ErrorCode == -2146827284 || e.Message == "NavigateArrow method of Range class failed") {
-                            checkNextLink = false;
-                        }
-                        else
-                        {
-                            throw;
-                        }
-                        
+                        // Found the first invalid arrow
+                        checkNextLink = false;
                     }
                 }
             }
