@@ -52,10 +52,10 @@ namespace BumbleBee.Refactorings
 
         protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
 
-        internal static void RefactorSingle(Range toInline, Context toInlineCtx, ContextNode toInlineAST = null)
+        private static void RefactorSingle(Range toInline, Context toInlineCtx)
         {
             // If no AST to inline is provided, inline the toInline AST
-            toInlineAST = toInlineAST ?? Helper.ParseCtx(toInline, toInlineCtx);
+            var toInlineAST = Helper.ParseCtx(toInline, toInlineCtx);
 
             // Gather dependencies
             var dependencies = GetAllDirectDependents(toInline);
@@ -139,7 +139,7 @@ namespace BumbleBee.Refactorings
         }
 
         /// <summary>
-        /// Get all direct dependents of the given cell.
+        /// Get all direct dependents of the given cell, or first cell of the given range
         /// </summary>
         /// <remarks>
         /// Contrary to Range.DirectDependents this also gives those in different sheets or workbooks.
@@ -152,19 +152,15 @@ namespace BumbleBee.Refactorings
         /// <returns>All dependent cells as a collection of ranges</returns>
         internal static ICollection<Range> GetAllDirectDependents(Range cell)
         {
-            if (cell.Count > 1)
-            {
-                throw new ArgumentException("Range has more than one cell.");
-            }
-
-            String cellAddress = cell.Address[false, false, XlReferenceStyle.xlA1, true];
+            var firstCell = cell;//cell.Cells[1, 1];
+            var cellAddress = firstCell.Address[false, false, XlReferenceStyle.xlA1, true];
 
             // Disable updating the screen so the user doesn't see our trace arrows
             cell.Application.ScreenUpdating = false;
 
             var dependents = new List<Range>();
 
-            cell.ShowDependents();
+            firstCell.ShowDependents();
             // Unfortunately we don't know beforehand how many arrows and links there are, so we'll have to loop till we encounter a non-existing one
             bool checkNextArrowNumber = true;
             for(int arrow = 1; checkNextArrowNumber; arrow++)
@@ -176,7 +172,7 @@ namespace BumbleBee.Refactorings
                     checkNextLink = false;
                     try
                     {
-                        Range dependent = cell.NavigateArrow(false, arrow, link);
+                        Range dependent = firstCell.NavigateArrow(false, arrow, link);
                         // This still is a valid arrow, so check the next one
                         if (cellAddress != dependent.Address[false, false, XlReferenceStyle.xlA1, true])
                         {
@@ -184,6 +180,7 @@ namespace BumbleBee.Refactorings
                             checkNextLink = true;
                             dependents.Add(dependent);
                         }
+                        //Marshal.ReleaseComObject(dependent);
                         // If you want to extend this to transitive dependencies, don't forget to do some circular reference detection
                     }
                     catch (COMException e) when (e.Message == "NavigateArrow method of Range class failed")
@@ -194,12 +191,13 @@ namespace BumbleBee.Refactorings
                 }
             }
 
-            cell.ShowDependents(false);
+            firstCell.ShowDependents(false);
             cell.Worksheet.ClearArrows();
             
             // Resume updating the screen
             cell.Application.ScreenUpdating = true;
 
+            //Marshal.ReleaseComObject(firstCell);
             return dependents;
         }
 

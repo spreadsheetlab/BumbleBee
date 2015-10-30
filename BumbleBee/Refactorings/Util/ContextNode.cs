@@ -114,9 +114,9 @@ namespace BumbleBee.Refactorings.Util
             if (ReferenceEquals(c2, null)) return false;
             if (ReferenceEquals(p1, p2) && c1.Equals(c2)) return true;
 
-            p1 = RemoveNonEqualityAffectingNodes(c1, p1);
+            p1 = RemoveNonEqualityAffectingNodes(p1);
             p1 = c1.Qualify(p1);
-            p2 = RemoveNonEqualityAffectingNodes(c2, p2);
+            p2 = RemoveNonEqualityAffectingNodes(p2);
             p2 = c2.Qualify(p2);
 
             return
@@ -172,7 +172,7 @@ namespace BumbleBee.Refactorings.Util
 
         internal static int GetHashCode(Context Ctx, ParseTreeNode pt)
         {
-            pt = RemoveNonEqualityAffectingNodes(Ctx, pt);
+            pt = RemoveNonEqualityAffectingNodes(pt);
             pt = Ctx.Qualify(pt);
             int hash = 17;
             unchecked
@@ -184,7 +184,7 @@ namespace BumbleBee.Refactorings.Util
             return hash;
         }
 
-        private static ParseTreeNode RemoveNonEqualityAffectingNodes(Context Ctx, ParseTreeNode pt)
+        private static ParseTreeNode RemoveNonEqualityAffectingNodes(ParseTreeNode pt)
         {
             return pt.SkipToRelevant(false);
         }
@@ -194,8 +194,7 @@ namespace BumbleBee.Refactorings.Util
         /// </summary>
         public IEnumerable<ParseTreeNode> CellContainedInRanges(ContextNode formula)
         {
-            var node = Node;
-            if (node.Is(GrammarNames.Formula)) node = node.ChildNodes.First();
+            var node = Node.SkipToRelevant(false);
             return CellContainedInRanges(Ctx.Qualify(node), formula);
         }
 
