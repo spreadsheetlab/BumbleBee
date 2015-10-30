@@ -186,7 +186,7 @@ namespace BumbleBee.Refactorings.Util
 
         private static ParseTreeNode RemoveNonEqualityAffectingNodes(Context Ctx, ParseTreeNode pt)
         {
-            return pt.SkipToRelevant();
+            return pt.SkipToRelevant(false);
         }
 
         /// <summary>
