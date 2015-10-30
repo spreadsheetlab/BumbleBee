@@ -20,9 +20,9 @@ using Infotron.PerfectXL.DataModel;
 using System.Windows.Forms;
 using BumbleBee.Refactorings;
 using BumbleBee.TaskPanes;
-using Infotron.Parsing;
 using FSharpEngine;
 using Irony.Parsing;
+using XLParser;
 
 namespace BumbleBee
 {

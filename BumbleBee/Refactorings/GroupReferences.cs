@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BumbleBee.Refactorings.Util;
 using Microsoft.Office.Interop.Excel;
-using Infotron.Parsing;
+using XLParser;
 using Infotron.Util;
 using Irony.Parsing;
 

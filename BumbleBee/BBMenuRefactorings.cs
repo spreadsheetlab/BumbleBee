@@ -21,7 +21,7 @@ namespace BumbleBee
 
         private readonly List<RefactorMenuItem> contextMenuRefactorings = new List<BBMenuRefactorings.RefactorMenuItem>
         {
-            new RefactorMenuItem {MenuText="Change to SUM or SUMIF",Refactoring=new OpToAggregate()},
+            new RefactorMenuItem {MenuText="Change to SUM or SUMIF",Refactoring=new PlusToSumMenuStub()},
             new RefactorMenuItem {MenuText="Group References", Refactoring=new GroupReferences(), NewGroup = true},
             new RefactorMenuItem {MenuText="Extract Formula", Refactoring=new ExtractFormulaMenuStub(), NewGroup = true},
             new RefactorMenuItem {MenuText="Inline Formula", Refactoring=new InlineFormula()},

@@ -5,9 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BumbleBee.Refactorings.Util;
-using Infotron.Parsing;
 using Irony.Parsing;
-using P = Infotron.Parsing.ExcelFormulaParser;
+using XLParser;
 
 namespace BumbleBee.Refactorings
 {
@@ -27,19 +26,19 @@ namespace BumbleBee.Refactorings
 
             if (!CanRefactor(applyto, out current, out opToRefactor))
             {
-                throw new ArgumentException("Cannot refactor this formula", "applyto");
+                throw new ArgumentException("Cannot refactor this formula", nameof(applyto));
             }
 
             // Gather the arguments to the aggregate function in this list
             var arguments = new List<ParseTreeNode>();
 
             // Traverse the tree while we encounter the op
-            while (P.MatchFunction(current, opToRefactor))
+            while (current.MatchFunction(opToRefactor))
             {
                 // All the ops we transform are left associative so right part of the tree can never be other ops.
                 // Left part might be more ops which we can also put into the aggregate
                 arguments.Add(current.ChildNodes[2]);
-                current = P.SkipToRevelantChildNodes(current.ChildNodes[0]);
+                current = current.ChildNodes[0].SkipToRelevant(false);
             }
             // Last left node does not contain any other ops, add it to the arguments
             arguments.Add(current);
@@ -48,7 +47,7 @@ namespace BumbleBee.Refactorings
 
             
             // construct the new formula with the aggregate
-            var newformula = String.Format("{0}({1})", functions[opToRefactor], String.Join(",", arguments.Select(P.Instance.Print)));
+            var newformula = $"{functions[opToRefactor]}({string.Join(",", arguments.Select(ExcelFormulaParser.Print))})";
             return newformula.Parse();
         }
 
@@ -61,20 +60,20 @@ namespace BumbleBee.Refactorings
 
         private static bool CanRefactor(ParseTreeNode applyto, out ParseTreeNode relevant, out string opToRefactor)
         {
-            relevant = P.SkipToRevelantChildNodes(applyto);
+            relevant = applyto.SkipToRelevant();
             opToRefactor = "";
 
-            if (!P.IsBinaryOperation(relevant)) return false;
-            opToRefactor = P.GetFunction(relevant);
+            if (!relevant.IsBinaryNonReferenceOperation()) return false;
+            opToRefactor = relevant.GetFunction();
 
             return functions.ContainsKey(opToRefactor);
         }
 
         private static readonly IReadOnlyDictionary<string, string> functions = new Dictionary<string, string>()
         {
-            {GrammarNames.OpAddition, "SUM"},
-            {GrammarNames.OpMultiplication, "PRODUCT"},
-            {GrammarNames.OpConcatenation, "CONCATENATE"}
+            {"+", "SUM"},
+            {"*", "PRODUCT"},
+            {"&", "CONCATENATE"}
         };
     }
 }

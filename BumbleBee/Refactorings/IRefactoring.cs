@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using BumbleBee.Refactorings.Util;
-using Infotron.Parsing;
+using XLParser;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
 
@@ -89,7 +89,7 @@ namespace BumbleBee.Refactorings
             return applyto.FitsShape(AppliesTo) && applyto.Cells.Cast<Range>().Any(cell => CanRefactor(Helper.Parse(cell)));
         }
 
-        protected override RangeShape.Flags AppliesTo { get { return RangeShape.Flags.NonEmpty; } }
+        protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
 
         public abstract ParseTreeNode Refactor(ParseTreeNode applyto);
         public abstract bool CanRefactor(ParseTreeNode applyto);

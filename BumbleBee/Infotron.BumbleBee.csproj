@@ -188,10 +188,6 @@
       <HintPath>..\packages\NetOffice.Excel.1.7.3.0\lib\net45\ExcelApi.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="FormulaParser, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\PerfectXLCore.0.7.5.0\lib\net45\FormulaParser.dll</HintPath>
-    </Reference>
     <Reference Include="GemBox.Spreadsheet">
       <HintPath>..\packages\PerfectXL.Dependencies.0.8.0\lib\GemBox.Spreadsheet.dll</HintPath>
     </Reference>
@@ -327,6 +323,7 @@
     <Compile Include="Refactorings\GroupReferences.cs" />
     <Compile Include="Refactorings\IntroduceCellName.cs" />
     <Compile Include="Refactorings\NotImplementedRefactoring.cs" />
+    <Compile Include="Refactorings\PlusToSumMenuStub.cs" />
     <Compile Include="Refactorings\Util\ContextNode.cs" />
     <Compile Include="Refactorings\Util\Helper.cs" />
     <Compile Include="Refactorings\InlineFormula.cs" />

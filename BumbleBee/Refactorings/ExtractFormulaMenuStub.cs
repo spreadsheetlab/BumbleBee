@@ -25,9 +25,6 @@ namespace BumbleBee.Refactorings
             return applyto.Cells.Cast<Range>().All(cell => cell.FormulaR1C1 == r1c1);
         }
 
-        protected override RangeShape.Flags AppliesTo
-        {
-            get { return RangeShape.Flags.NonEmpty; }
-        }
+        protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
     }
 }
