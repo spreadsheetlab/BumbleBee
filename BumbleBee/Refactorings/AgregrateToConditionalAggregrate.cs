@@ -21,7 +21,7 @@ namespace BumbleBee.Refactorings
         {
             // Shape check
             if (!base.CanRefactor(applyto)) return false;
-            
+            /*
             // Look for +'s/SUM's, COUNT and AVERAGE
             // TODO: Add +
             var ptn = Helper.Parse(applyto);
@@ -51,6 +51,8 @@ namespace BumbleBee.Refactorings
                         || args.ChildNodes.All(arg => arg.ChildNodes[0].Is(GrammarNames.Reference))
                        );
             });
+            */
+            throw new NotImplementedException();
         }
 
         protected override RangeShape.Flags AppliesTo

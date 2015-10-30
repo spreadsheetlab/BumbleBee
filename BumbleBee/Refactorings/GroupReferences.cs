@@ -38,21 +38,22 @@ namespace BumbleBee.Refactorings
             {
                 throw new InvalidOperationException("Must have reference to Excel worksheet to group references");
             }
-            var targetFunctions = ExcelFormulaParser.AllNodes(applyto)
-                .Where(IsTargetFunction);
+            var targetFunctions = applyto.AllNodes()
+                .Where(IsTargetFunction)
+                .ToList();
 
             foreach (var function in targetFunctions)
             {
-                var arguments = function.ChildNodes[1].ChildNodes;
+                var arguments = function.GetFunctionArguments().ToList();
 
-                // Group ArrayAsArgument arguments
-                foreach (var arg in arguments.Where(arg => arg.Is(GrammarNames.ArrayAsArgument)))
+                // Group Union arguments
+                foreach (var arg in arguments.Select(arg => arg.SkipToRelevant(false)).Where(ExcelFormulaParser.IsUnion).ToList())
                 {
-                    GroupReferenceList(arg.ChildNodes[0].ChildNodes);
+                    GroupReferenceList(arg.GetFunctionArguments().ToList());
                 }
 
                 // If this is a varags function group all arguments
-                if (varargsFunctions.Contains(ExcelFormulaParser.GetFunction(function)))
+                if (varargsFunctions.Contains(function.GetFunction()))
                 {
                     GroupReferenceList(arguments);
                 }
@@ -61,7 +62,7 @@ namespace BumbleBee.Refactorings
             return applyto;
         }
 
-        private void GroupReferenceList(ParseTreeNodeList arguments)
+        private void GroupReferenceList(List<ParseTreeNode> arguments)
         {
             var togroup = arguments
                     .Where(NodeCanBeGrouped);
@@ -70,7 +71,7 @@ namespace BumbleBee.Refactorings
 
             var grouped = GroupTheReferences(togroup)
                 .OrderBy(x => x) // Sort references alphabetically
-                .Select(x => x.Parse()); // Make them parsetreenodes again
+                .Select(ExcelFormulaParser.Parse); // Make them parsetreenodes again
 
             var newargs = toNotGroup.Concat(grouped).ToList();
             arguments.Clear();
@@ -79,19 +80,19 @@ namespace BumbleBee.Refactorings
 
         public override bool CanRefactor(ParseTreeNode applyto)
         {
-            return ExcelFormulaParser.AllNodes(applyto).Any(IsTargetFunction);
+            return applyto.AllNodes().Any(IsTargetFunction);
         }
 
         private static bool IsTargetFunction(ParseTreeNode node)
         {
             return
                     // Not interested in not-functions
-                    ExcelFormulaParser.IsFullFunction(node)
+                    node.IsNamedFunction()
                     // Or functions without arguments
                     && node.ChildNodes[1].ChildNodes.Any() 
-                    && (varargsFunctions.Contains(ExcelFormulaParser.GetFunction(node))
+                    && (varargsFunctions.Contains(node.GetFunction())
                         // Functions have an arrayasargument parameter
-                        || node.ChildNodes[1].ChildNodes.Any(n => n.Is(GrammarNames.ArrayAsArgument))
+                        || node.GetFunctionArguments().Any(n => n.SkipToRelevant().IsUnion())
                        )
                    ;
         }
@@ -99,12 +100,22 @@ namespace BumbleBee.Refactorings
         private static bool NodeCanBeGrouped(ParseTreeNode node)
         {
             // can be grouped if the node is a reference
-            var relevant = ExcelFormulaParser.SkipToRevelantChildNodes(node);
+            var relevant = node.SkipToRelevant();
             return relevant.Is(GrammarNames.Reference)
-                // no named ranges
-                && !ExcelFormulaParser.AllNodes(node).Any(x=>x.Is(GrammarNames.NamedRange))
-                // no vertical or horizontal ranges
-                && !(relevant.ChildNodes[0].ChildNodes[0].Is(GrammarNames.Range) && relevant.ChildNodes[0].ChildNodes[0].ChildNodes.Count == 1);
+                // And it's not
+                && !node.AllNodes().Any(childnode =>
+                    // named ranges
+                    childnode.Is(GrammarNames.NamedRange)
+                    // vertical or horizontal ranges
+                    || childnode.Is(GrammarNames.HorizontalRange)
+                    || childnode.Is(GrammarNames.VerticalRange)
+                    // structured references
+                    || childnode.Is(GrammarNames.StructureReference)
+                    // Error
+                    || childnode.Is(GrammarNames.RefError)
+                    // Reference Functions
+                    || childnode.IsFunction()
+                );
         }
 
         /// <summary>
