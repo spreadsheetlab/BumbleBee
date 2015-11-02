@@ -21,21 +21,52 @@ namespace BumbleBee.Refactorings
 
         public override ParseTreeNode Refactor(ParseTreeNode applyto)
         {
-            ParseTreeNode current;
             string opToRefactor;
+            var args = GetBinOpArguments(applyto, out opToRefactor);
 
-            if (!CanRefactor(applyto, out current, out opToRefactor))
+            if (!functions.ContainsKey(opToRefactor))
             {
                 throw new ArgumentException("Cannot refactor this formula", nameof(applyto));
             }
+
+            // construct the new formula with the aggregate
+            var newformula = $"{functions[opToRefactor]}({string.Join(",", args.Select(ExcelFormulaParser.Print))})";
+            return newformula.Parse();
+        }
+
+        public override bool CanRefactor(ParseTreeNode applyto) => functions.ContainsKey(GetBinOp(applyto));
+
+        private static readonly IReadOnlyDictionary<string, string> functions = new Dictionary<string, string>()
+        {
+            {"+", "SUM"},
+            {"*", "PRODUCT"},
+            {"&", "CONCATENATE"}
+        };
+
+        internal static string GetBinOp(ParseTreeNode node)
+        {
+            node = node.SkipToRelevant();
+
+            return !node.IsBinaryNonReferenceOperation() ? "" : node.GetFunction();
+        }
+
+        /// <summary>
+        /// Find all arguments of a binary operator. E.g. 1 + 2 + 3 returns [1,2,3]
+        /// </summary>
+        internal static List<ParseTreeNode> GetBinOpArguments(ParseTreeNode root, out string op)
+        {
+            var current = root.SkipToRelevant(false);
+            op = GetBinOp(root);
+
+            if(op == "") return new List<ParseTreeNode>();
 
             // Gather the arguments to the aggregate function in this list
             var arguments = new List<ParseTreeNode>();
 
             // Traverse the tree while we encounter the op
-            while (current.MatchFunction(opToRefactor))
+            while (current.MatchFunction(op))
             {
-                // All the ops we transform are left associative so right part of the tree can never be other ops.
+                // All the ops are left associative so right part of the tree can never be other ops.
                 // Left part might be more ops which we can also put into the aggregate
                 arguments.Add(current.ChildNodes[2]);
                 current = current.ChildNodes[0].SkipToRelevant(false);
@@ -45,35 +76,7 @@ namespace BumbleBee.Refactorings
             // Arguments were pushed in reverse order
             arguments.Reverse();
 
-            
-            // construct the new formula with the aggregate
-            var newformula = $"{functions[opToRefactor]}({string.Join(",", arguments.Select(ExcelFormulaParser.Print))})";
-            return newformula.Parse();
-        }
-
-        public override bool CanRefactor(ParseTreeNode applyto)
-        {
-            ParseTreeNode relevant;
-            string opToRefactor;
-            return CanRefactor(applyto, out relevant, out opToRefactor);
-        }
-
-        private static bool CanRefactor(ParseTreeNode applyto, out ParseTreeNode relevant, out string opToRefactor)
-        {
-            relevant = applyto.SkipToRelevant();
-            opToRefactor = "";
-
-            if (!relevant.IsBinaryNonReferenceOperation()) return false;
-            opToRefactor = relevant.GetFunction();
-
-            return functions.ContainsKey(opToRefactor);
-        }
-
-        private static readonly IReadOnlyDictionary<string, string> functions = new Dictionary<string, string>()
-        {
-            {"+", "SUM"},
-            {"*", "PRODUCT"},
-            {"&", "CONCATENATE"}
-        };
+            return arguments;
+        } 
     }
 }

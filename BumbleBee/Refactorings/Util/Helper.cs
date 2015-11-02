@@ -64,13 +64,13 @@ namespace BumbleBee.Refactorings.Util
 
         public static ParseTreeNode Parse(Range cell)
         {
-            if (cell.Count != 1) throw new ArgumentException("Must be a single cell", "cell");
+            if (cell.Count != 1) throw new ArgumentException("Must be a single cell", nameof(cell));
             string f = cell.Formula;
             string toParse =
                 cell.HasFormula ? f.Substring(1)
                 : isNumeric(f) ? f
                 // Parse as text, replace single " with double "" to avoid breaking the escape sequence
-                : String.Format("\"{0}\"", f.Replace("\"", "\"\""));
+                : $"\"{f.Replace("\"", "\"\"")}\"";
             return Parse(toParse);
         }
 
