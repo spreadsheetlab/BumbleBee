@@ -8,6 +8,8 @@ using BumbleBee.Refactorings.Util;
 using XLParser;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
 
 
 namespace BumbleBee.Refactorings
@@ -78,7 +80,7 @@ namespace BumbleBee.Refactorings
                     }
                     catch (COMException e)
                     {
-                        throw new InvalidOperationException(String.Format("Refactoring produced invalid formula '{0}'", refactored.Print()), e);
+                        throw new InvalidOperationException($"Refactoring produced invalid formula '{refactored.Print()}'", e);
                     }
                 }
             }
@@ -86,7 +88,10 @@ namespace BumbleBee.Refactorings
 
         public override bool CanRefactor(Range applyto)
         {
-            return applyto.FitsShape(AppliesTo) && applyto.Cells.Cast<Range>().Any(cell => CanRefactor(Helper.Parse(cell)));
+            return applyto.FitsShape(AppliesTo)
+                && applyto
+                .UniqueFormulas(MAX_CELLS)
+                .Any(formula => formula != "" && CanRefactor(formula.Parse()));
         }
 
         protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;

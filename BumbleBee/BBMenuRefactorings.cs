@@ -2,11 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using BumbleBee.Refactorings;
+using BumbleBee.Refactorings.Util;
 using BumbleBee.TaskPanes;
 using Microsoft.Office.Interop.Excel;
 using Microsoft.Office.Tools;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
 
 namespace BumbleBee
 {
@@ -104,15 +108,22 @@ namespace BumbleBee
             }
         }
 
+
+        private const int MAX_NUMBER_OF_CELLS_TO_CHECK = 50;
+
         /// <summary>
         /// This method enables/disables the refactorings in the context menu
         /// </summary>
-        private void RefactorMenuEnableRelevant(object Sh, Range Target, ref bool Cancel)
+        private void RefactorMenuEnableRelevant(object sheet, ExcelRaw.Range target, ref bool cancel)
         {
+            // Because of performance reasons, don't check if a large number of cells is selected
+            var count = target.Count;
             foreach (var item in contextMenuRefactorings)
             {
-                item.Button.Enabled = item.Refactoring.CanRefactor(Target);
+                item.Button.Enabled = item.Refactoring.CanRefactor(target);
             }
+            Marshal.ReleaseComObject(target);
+            if (Marshal.IsComObject(sheet)) Marshal.ReleaseComObject(sheet);
         }
     }
 }
