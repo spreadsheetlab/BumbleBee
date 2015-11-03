@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using BumbleBee.Refactorings.Util;
 using Irony.Parsing;
-using Microsoft.Office.Interop.Excel;
+//using Microsoft.Office.Interop.Excel;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
 using XLParser;
 using Infotron.Util;
 
@@ -13,7 +17,7 @@ namespace BumbleBee.Refactorings
 {
     class AgregrateToConditionalAggregrate : RangeRefactoring
     {
-        public override void Refactor(Range applyto)
+        public override void Refactor(ExcelRaw.Range applyto)
         {
             if(!CanRefactor(applyto)) throw new ArgumentException("Cannot refactor this range");
 
@@ -23,29 +27,122 @@ namespace BumbleBee.Refactorings
                 _opToAggregate.Refactor(applyto);
             }
 
-            var node = Helper.Parse(applyto);
+            var node = Helper.Parse(applyto).SkipToRelevant(false);
             var fname = node.GetFunction();
             var fargs = node.GetFunctionArguments();
 
             PrefixInfo prefix;
             bool columnEqual;
-            List<int> columns;
+            List<int> summedColumns;
             bool rowEqual;
-            List<int> rows;
-            if (!checkRowAndColumns(node, out prefix, out columnEqual, out columns, out rowEqual, out rows))
+            List<int> summedRows;
+            if (!checkRowAndColumns(node, out prefix, out columnEqual, out summedColumns, out rowEqual, out summedRows))
             {
                 throw new ArgumentException("All references cells must be in the same row or column");
             }
 
-            if (columnEqual)
+            summedColumns.Sort();
+            summedRows.Sort();
+
+            var summedColumnsSet = new HashSet<int>(summedColumns);
+            var summedRowsSet = new HashSet<int>(summedRows);
+
+            if (!columnEqual) throw new NotImplementedException("Cant do this for rows yet");
+            ExcelRaw.Range summedRange = null;
+            ExcelRaw.Worksheet worksheet = null;
+            ExcelRaw.Range usedRange = null;
+            ExcelRaw.Range usedColumns = null;
+            ExcelRaw.Range usedRows = null;
+            try
             {
-                // TODO: Get the excel range representing the summed values. Maybe .precedents?
-                // Shift it to first column, check if determiner column, go to next column. Continue until column is empty and a sufficient number has been tried.
+                summedRange = applyto.Precedents;
+
+
+                // Check if we have the correct range
+                var precendentRows = summedRange.Cast<ExcelRaw.Range>().Select(cell =>
+                {
+                    var addr = cell.Address[false, false];
+                    Marshal.ReleaseComObject(cell);
+                    return new Location(addr).Row1;
+                }).OrderBy(x=>x);
+                Debug.Assert(summedRows.SequenceEqual(precendentRows), "Precedents given by Excel did now correspond to summed rows");
+
+                worksheet = applyto.Worksheet;
+                //cells = worksheet.Cells;
+                // Find last filled column in worksheet
+                usedRange = worksheet.UsedRange;
+                usedColumns = usedRange.Columns;
+                usedRows = usedRange.Rows;
+                var usedRowsCount = usedRows.Count;
+
+                // Determiner column: column we can use as the subject for the SUMIF predicate
+                var determiners = usedColumns.Cast<ExcelRaw.Range>().Select(column => {
+                    ExcelRaw.Range columncells = null;
+                    ExcelRaw.Range firstCell = null;
+                    try
+                    {
+                        columncells = column.Cells;
+                        firstCell = columncells[summedRows[0], 1];
+                        object candidatevalue = firstCell.Value2;
+                        
+                        // Check if [Column,Firstrow] contains a value
+                        if (candidatevalue == null) return null;
+
+                        // Check if all summed rows contain the same value
+                        // Check if none of the other rows contain that value
+                        if (Enumerable.Range(1, usedRowsCount).All(row =>
+                        {
+                            ExcelRaw.Range cell = columncells[row, 1];
+                            object v = cell.Value2;
+                            cell.ReleaseCom();
+                            // Empty cell, candidate can't be empty so we can ignore this
+                            if (v == null) return true;
+                            bool isSummed = summedRowsSet.Contains(row);
+                            // All summed rows must be candidatevalue
+                            // All not-summed rows must not be candidatevalue
+                            return (isSummed && candidatevalue.Equals(v)) || (!isSummed && !candidatevalue.Equals(v));
+                        }))
+                        {
+                            // We found a candidatecolumn!
+                            return Tuple.Create(candidatevalue, column.Column);
+                        }
+
+                        return null;
+                    }
+                    finally
+                    {
+                        firstCell.ReleaseCom();
+                        columncells.ReleaseCom();
+                        column.ReleaseCom();
+                    }
+                });
+                var determiner = determiners.FirstOrDefault(found => found != null);
+
+                // If we didn't find a candidate, do nothing
+                if (determiner == null) return;
+                string determinerValue = (determiner.Item1 is double) ? determiner.Item1.ToString() : $"\"{determiner.Item1}\"";
+                var determinerColumn = AuxConverter.ConvertColumnToStr(determiner.Item2-1);
+                var summedColumn = AuxConverter.ConvertColumnToStr(summedColumns[0]-1);
+                
+                var formula = $"{fname}IF({determinerColumn}:{determinerColumn},{determinerValue},{summedColumn}:{summedColumn})";
+                try
+                {
+                    applyto.Formula = $"={formula}";
+                }
+                catch (COMException)
+                {
+                    throw new InvalidOperationException($"Refactoring created invalid formula <<{formula}>>");
+                }
             }
-            else
+            finally
             {
-                throw new NotImplementedException();
+                usedRange.ReleaseCom();
+                usedColumns.ReleaseCom();
+                usedRows.ReleaseCom();
+                worksheet.ReleaseCom();
+                summedRange.ReleaseCom();
             }
+
         }
 
         private static bool IsSingleCellReference(ParseTreeNode arg)
@@ -57,7 +154,7 @@ namespace BumbleBee.Refactorings
 
         private readonly OpToAggregate _opToAggregate = new OpToAggregate();
 
-        public override bool CanRefactor(Range applyto)
+        public override bool CanRefactor(ExcelRaw.Range applyto)
         {
             // Shape check
             if (!base.CanRefactor(applyto)) return false;
@@ -77,10 +174,22 @@ namespace BumbleBee.Refactorings
 
             PrefixInfo prefix;
             bool columnEqual;
-            List<int> column;
+            List<int> columns;
             bool rowEqual;
-            List<int> row;
-            return checkRowAndColumns(node, out prefix, out columnEqual, out column, out rowEqual, out row);
+            List<int> rows;
+            if (!checkRowAndColumns(node, out prefix, out columnEqual, out columns, out rowEqual, out rows)) return false;
+            
+            // If we only have a single precedent, no sense in summing
+            if (columnEqual && rowEqual) return false;
+
+            // If we encounter a row multiple times, we can't do the refactoring
+            if ((columnEqual && rows.Count != rows.Distinct().Count())
+              ||(rowEqual && columns.Count != columns.Distinct().Count()))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private static bool checkRowAndColumns(ParseTreeNode node, out PrefixInfo prefix, out bool columnEqual, out List<int> columns, out bool rowEqual, out List<int> rows)

@@ -152,6 +152,11 @@ namespace BumbleBee.Refactorings.Util
             }
             Marshal.ReleaseComObject(cells);
             return formulas;
-        } 
+        }
+
+        public static void ReleaseCom(this object o)
+        {
+            if (o != null && Marshal.IsComObject(o)) Marshal.ReleaseComObject(o);
+        }
     }
 }
