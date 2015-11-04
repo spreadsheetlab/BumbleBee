@@ -210,57 +210,42 @@ namespace BumbleBee.Refactorings.Util
         private static IEnumerable<ParseTreeNode> CellContainedInRanges(ParseTreeNode fqcellref, ParseTreeNode formula, Context CtxF)
         {
             var cell = new Location(fqcellref.ChildNodes[1].Print());
-            return 
-                // Select all  references
-                formula.GetReferenceNodes()
-                // Qualify them
-                .Select(CtxF.Qualify)
-                // filter
-                .Where(reference =>
-                    // Remove non everything that's not a range
-                       reference.ChildNodes.Count == 2
-                    && reference.ChildNodes[1].ChildNodes[0].Is(GrammarNames.Range)
-                    // Remove non-matching prefixes, those refer to other ranges
-                    && Equals(fqcellref.ChildNodes[0], reference.ChildNodes[0], CtxF, CtxF)
-                 )
-                // Check if the cell is in the range
-                .Where(reference => {
-                    var range = reference.ChildNodes[1].ChildNodes[0];
-                    switch (range.ChildNodes.Count)
-                    {
-                        // Vrange or HRange
-                        case 1:
-                            var pieces = range.ChildNodes[0].Token.ValueString.Replace("$","").Split(':');
-                            try
-                            {
-                                // HRange, 1:5
-                                return cell.Row >= (int.Parse(pieces[0]) - 1) && cell.Row <= (int.Parse(pieces[1]) - 1);
-                            }
-                            catch (FormatException)
-                            {
-                                // VRange, A:E
-                                return cell.Column >= AuxConverter.ColToInt(pieces[0])
-                                    && cell.Column <= AuxConverter.ColToInt(pieces[1]);
-                            }
-
-                        // Cell : Cell
-                        case 3:
-                            var start = new Location(range.ChildNodes[0].ChildNodes[0].Token.ValueString);
-                            var end = new Location(range.ChildNodes[2].ChildNodes[0].Token.ValueString);
-                            return cell.Row >= start.Row && cell.Row <= end.Row
-                                && cell.Column >= start.Column && cell.Column <= end.Column;
-                        // Cell : Prefix Cell
-                        case 4:
-                            // This is a very complex case that no-one should actually use...
-                            // We'll accept that it fails in this case
-                            // Something like Sheet1!A1:Sheet5!A1 which means A1 from Sheet1 through 5.
-                            // BUG: CellContainedInRanges doesn't detect if the cell is in a Sheet!Cell:Sheet!Cell range.
-                            return false;
-                        default:
-                            throw new InvalidOperationException("Grammar for ranges was changed without modifying this method.");
-                    }
-                })
-                ;
+            // Select all  references and qualify them
+            var references = formula.GetReferenceNodes().Select(CtxF.Qualify).ToList();
+            
+            // Check the different types of ranges
+            var ranges = references.Where(reference => reference.MatchFunction(":"));
+            var rangesc = ranges.Where(range =>
+                {
+                    var args = range.GetFunctionArguments().Select(ExcelFormulaParser.Print).ToList();
+                    var start = new Location(args[0]);
+                    var end = new Location(args[1]);
+                    return cell.Row >= start.Row && cell.Row <= end.Row
+                           && cell.Column >= start.Column && cell.Column <= end.Column;
+                });
+            var vranges = references.Where(reference =>
+                    reference.ChildNodes[0].Is(GrammarNames.Prefix)
+                    && reference.ChildNodes[1].Is(GrammarNames.VerticalRange)
+            );
+            var vrangesc = vranges.Where(reference =>
+            {
+                var vrange = reference.ChildNodes[1];
+                var pieces = vrange.Print().Replace("$", "").Split(':');
+                return cell.Column >= AuxConverter.ColToInt(pieces[0])
+                    && cell.Column <= AuxConverter.ColToInt(pieces[1]);
+            });
+            var hranges = references.Where(reference =>
+                    reference.ChildNodes[0].Is(GrammarNames.Prefix)
+                    && reference.ChildNodes[1].Is(GrammarNames.HorizontalRange)
+            );
+            var hrangesc = hranges.Where(reference =>
+            {
+                var hrange = reference.ChildNodes[1];
+                var pieces = hrange.Print().Replace("$", "").Split(':');
+                return cell.Row >= (int.Parse(pieces[0]) - 1) && cell.Row <= (int.Parse(pieces[1]) - 1);
+            });
+            var combined = new[] {rangesc, vrangesc, hrangesc}.SelectMany(x => x);
+            return combined;
         }
 
         /// <summary>
@@ -276,13 +261,17 @@ namespace BumbleBee.Refactorings.Util
             get
             {
                 return References
-                    .Where(reference => reference.ChildNodes.Count == 2
-                                        && reference.ChildNodes[1].ChildNodes[0].Is(GrammarNames.NamedRange)
-                    ).Select(reference => new NamedRangeDef(
-                        reference.ChildNodes[0].ChildNodes[0].ChildNodes[0].Token.ValueString // file
-                        , reference.ChildNodes[0].ChildNodes[1].ChildNodes[0].Token.ValueString // sheet
-                        , reference.ChildNodes[1].ChildNodes[0].ChildNodes[0].Token.ValueString // name
-                        ));
+                    .Where(reference => reference.ChildNodes[0].Is(GrammarNames.Prefix)
+                                        && reference.ChildNodes[1].Is(GrammarNames.NamedRange)
+                    ).Select(reference =>
+                    {
+                        var prefix = reference.ChildNodes[0].GetPrefixInfo();
+                        return new NamedRangeDef(
+                            prefix.FileName // file
+                            , prefix.Sheet // sheet
+                            , reference.ChildNodes[1].Print() // name
+                            );
+                    });
             }
         }
     }
@@ -312,8 +301,19 @@ namespace BumbleBee.Refactorings.Util
         /// <remarks>Qualify because (book,sheet,name) is a fully qualified name</remarks>
         public ParseTreeNode Qualify(ParseTreeNode reference)
         {
+
             // Check if this reference can be qualified
             if (!isPrefixableReference(reference)) return reference;
+
+            // Reference operators
+            if (reference.ChildNodes.Count > 0 && reference.ChildNodes[0].IsFunction())
+            {
+                return CustomParseTreeNode.From(reference).SetChildNodes(
+                        Qualify(reference.ChildNodes[0]),
+                        reference.ChildNodes[1],
+                        Qualify(reference.ChildNodes[2])
+                    );
+            }
 
             var referenced = reference.ChildNodes.First(node => !node.Is(GrammarNames.Prefix));
             bool hasPrefix = reference.ChildNodes.Any(node => node.Is(GrammarNames.Prefix));
@@ -358,7 +358,8 @@ namespace BumbleBee.Refactorings.Util
             if (!reference.Is(GrammarNames.Reference)) return false;
             // No qualifying to do if it's a Functioncall or dynamic data exchange
             var relevant = reference.SkipToRelevant();
-            if (relevant.IsFunction() || relevant.Is(GrammarNames.DynamicDataExchange)) return false;
+            var child = relevant.ChildNodes.Count > 0 ? relevant.ChildNodes[0] : null;
+            if ((child?.IsFunction()??false) || (child?.Is(GrammarNames.DynamicDataExchange)??false)) return false;
             return true;
         }
 

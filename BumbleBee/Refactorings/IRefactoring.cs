@@ -89,9 +89,7 @@ namespace BumbleBee.Refactorings
         public override bool CanRefactor(Range applyto)
         {
             return applyto.FitsShape(AppliesTo)
-                && applyto
-                .UniqueFormulas(MAX_CELLS)
-                .Any(formula => formula != "" && CanRefactor(formula.Parse()));
+                && applyto.UniqueFormulas(MAX_CELLS).Any(CanRefactor);
         }
 
         protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;

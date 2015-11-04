@@ -126,11 +126,11 @@ namespace BumbleBee.Refactorings.Util
         /// Gives all unique formulas in this range (according to the R1C1 formula)
         /// </summary>
         /// <param name="cellsToExamine">Maximum number of cells to examine</param>
-        public static IEnumerable<string> UniqueFormulas(this Range r, int cellsToExamine = int.MaxValue)
+        public static IEnumerable<ParseTreeNode> UniqueFormulas(this Range r, int cellsToExamine = int.MaxValue)
         {
             var cells = r.Cells;
             var encountered = new HashSet<string>();
-            var formulas = new List<string>();
+            var formulas = new List<ParseTreeNode>();
             var count = 0;
             foreach (ExcelRaw.Range cell in cells)
             {
@@ -141,7 +141,7 @@ namespace BumbleBee.Refactorings.Util
                     if (!encountered.Contains(r1c1))
                     {
                         encountered.Add(r1c1);
-                        formulas.Add(cell.Formula);
+                        formulas.Add(Parse(cell));
                     }
                     count++;
                 }
