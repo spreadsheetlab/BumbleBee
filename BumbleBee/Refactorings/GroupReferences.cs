@@ -28,8 +28,11 @@ namespace BumbleBee.Refactorings
 
         public override void Refactor(Range applyto)
         {
+            var existing = excel;
             excel = applyto.Worksheet;
             base.Refactor(applyto);
+            excel.ReleaseCom();
+            excel = existing;
         }
 
         public override ParseTreeNode Refactor(ParseTreeNode applyto)
@@ -44,25 +47,34 @@ namespace BumbleBee.Refactorings
 
             foreach (var function in targetFunctions)
             {
-                var arguments = function.GetFunctionArguments().ToList();
+                var arguments = function.GetFunctionArguments().Select(node => node.SkipToRelevant()).ToList();
+                var unions = arguments
+                    .Select(arg => arg.ChildNodes.Count > 0 ? arg.ChildNodes[0] : arg)
+                    .Where(ExcelFormulaParser.IsUnion);
 
                 // Group Union arguments
-                foreach (var arg in arguments.Select(arg => arg.SkipToRelevant(false)).Where(ExcelFormulaParser.IsUnion).ToList())
+                foreach (var fcall in unions)
                 {
-                    GroupReferenceList(arg.GetFunctionArguments().ToList());
+                    var args = fcall.GetFunctionArguments().ToList();
+                    var union = fcall.ChildNodes[0];
+                    var newargs = GroupReferenceList(args);
+                    union.ChildNodes.Clear();
+                    union.ChildNodes.AddRange(newargs);
                 }
 
                 // If this is a varags function group all arguments
                 if (varargsFunctions.Contains(function.GetFunction()))
                 {
-                    GroupReferenceList(arguments);
+                    var newargs = GroupReferenceList(arguments).ToList();
+                    function.ChildNodes[1].ChildNodes.Clear();
+                    function.ChildNodes[1].ChildNodes.AddRange(newargs);
                 }
             }
 
             return applyto;
         }
 
-        private void GroupReferenceList(List<ParseTreeNode> arguments)
+        private IEnumerable<ParseTreeNode> GroupReferenceList(List<ParseTreeNode> arguments)
         {
             var togroup = arguments
                     .Where(NodeCanBeGrouped);
@@ -73,9 +85,7 @@ namespace BumbleBee.Refactorings
                 .OrderBy(x => x) // Sort references alphabetically
                 .Select(ExcelFormulaParser.Parse); // Make them parsetreenodes again
 
-            var newargs = toNotGroup.Concat(grouped).ToList();
-            arguments.Clear();
-            arguments.AddRange(newargs);
+            return toNotGroup.Concat(grouped);
         }
 
         public override bool CanRefactor(ParseTreeNode applyto)
