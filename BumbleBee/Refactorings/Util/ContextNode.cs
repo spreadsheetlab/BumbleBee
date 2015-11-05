@@ -214,7 +214,7 @@ namespace BumbleBee.Refactorings.Util
             var references = formula.GetReferenceNodes().Select(CtxF.Qualify).ToList();
             
             // Check the different types of ranges
-            var ranges = references.Where(reference => reference.MatchFunction(":"));
+            var ranges = formula.AllNodes().Where(reference => reference.MatchFunction(":"));
             var rangesc = ranges.Where(range =>
                 {
                     var args = range.GetFunctionArguments().Select(ExcelFormulaParser.Print).ToList();
@@ -301,19 +301,8 @@ namespace BumbleBee.Refactorings.Util
         /// <remarks>Qualify because (book,sheet,name) is a fully qualified name</remarks>
         public ParseTreeNode Qualify(ParseTreeNode reference)
         {
-
             // Check if this reference can be qualified
             if (!isPrefixableReference(reference)) return reference;
-
-            // Reference operators
-            if (reference.ChildNodes.Count > 0 && reference.ChildNodes[0].IsFunction())
-            {
-                return CustomParseTreeNode.From(reference).SetChildNodes(
-                        Qualify(reference.ChildNodes[0]),
-                        reference.ChildNodes[1],
-                        Qualify(reference.ChildNodes[2])
-                    );
-            }
 
             var referenced = reference.ChildNodes.First(node => !node.Is(GrammarNames.Prefix));
             bool hasPrefix = reference.ChildNodes.Any(node => node.Is(GrammarNames.Prefix));

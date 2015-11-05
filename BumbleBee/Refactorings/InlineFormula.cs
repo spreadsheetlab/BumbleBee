@@ -84,15 +84,25 @@ namespace BumbleBee.Refactorings
                     var ranges = toInlineAddress.CellContainedInRanges(dependentAST);
                     if (ranges.Any())
                     {
-                        throw new InvalidOperationException($"{dependent.SheetAndAddress()} refers to cell in range '{ranges.First().Print()}'");
+                        var minimal = toInlineAST.Ctx.QualifyMinimal(ranges.First());
+                        throw new InvalidOperationException($"{dependent.SheetAndAddress()} refers to cell in range '{minimal.Print()}'");
                     }
                     // Check if the dependent has the cell in a named range
 
                     string range;
-                    var nrs = dependentAST.NamedRanges
-                        .Select(nr => toInline.Application.Names.Find(nr))
+                    var nrs = dependentAST.NamedRanges;
+                    var excelnames = nrs
+                        .Select(nr =>
+                        {
+                            var app = toInline.Application;
+                            var names = app.Names;
+                            var name = names.Find(nr);
+                            names.ReleaseCom();
+                            app.ReleaseCom();
+                            return name;
+                        })
                         .Where(nr => nr != null);
-                    if (IsInNamedRanges(toInline, nrs, out range))
+                    if (IsInNamedRanges(toInline, excelnames, out range))
                     {
                         throw new InvalidOperationException( $"{dependent.SheetAndAddress()} refers to cell in named range '{range}'.");
                     }
@@ -101,7 +111,7 @@ namespace BumbleBee.Refactorings
                     // In case the above error conditions fail
                     if (!dependentAST.Contains(toInlineAddress))
                     {
-                        throw new InvalidOperationException(string.Format("{0} refers to cell {1}, but it is unknown how.",dependent.SheetAndAddress(), toInline.Address[false,false]));
+                        throw new InvalidOperationException($"{dependent.SheetAndAddress()} refers to cell {toInline.Address[false, false]}, but it is unknown how.");
                     }
 
                     var newFormula = dependentAST.Replace(toInlineAddress, toInlineAST);

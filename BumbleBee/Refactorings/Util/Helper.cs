@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using XLParser;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
+using stdole;
 using Excel = NetOffice.ExcelApi;
 using ExcelRaw = Microsoft.Office.Interop.Excel;
 
@@ -101,20 +102,44 @@ namespace BumbleBee.Refactorings.Util
             return cellAddressRegex.IsMatch(targetAddress);
         }
 
-        // BUG: Workbooks aren't considered yet because the parser can't parse workbook names yet
-        public static Name Find(this Names names, NamedRangeDef nr, bool ignoreWorkbook = true)
+        public static Name Find(this Names names, NamedRangeDef nr)
         {
             return names.Cast<Name>()
                 .FirstOrDefault(name =>
-                    nr.Name == name.Name
-                 && nr.Worksheet == (name.Parent is Workbook ? "" : name.Parent.Name)
-                 && (ignoreWorkbook || nr.Workbook == (name.Parent is Workbook ? name.Parent : name.Parent.Parent).Name)
-                 );
+                {
+                    Worksheet ws = null;
+                    Workbook wb = null;
+                    try
+                    {
+                        wb = name.Parent as Workbook;
+                        if (wb != null)
+                        {
+                            return nr.Name == name.Name && nr.Workbook == wb.Name;
+                        }
+                        else
+                        {
+                            ws = name.Parent;
+                            wb = ws.Parent;
+                            return nr.Name == name.Name
+                            && nr.Worksheet == ws.Name
+                            && (nr.Workbook == wb.Name || nr.Workbook == "");
+                        }
+                    }
+                    finally
+                    {
+                        ws.ReleaseCom();
+                        wb.ReleaseCom();
+                    }
+                }
+                );
         }
 
         public static string SheetAndAddress(this Range r)
         {
-            return String.Format("{0}!{1}", r.Worksheet.Name, r.Address[false,false]);
+            var w = r.Worksheet;
+            var name = w.Name;
+            w.ReleaseCom();
+            return $"{name}!{r.Address[false, false]}";
         }
 
         public static IEnumerable<Range> CellsToInspect(this Range r)
