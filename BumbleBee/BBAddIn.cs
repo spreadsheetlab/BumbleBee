@@ -35,6 +35,10 @@ namespace BumbleBee
 
     public partial class BBAddIn
     {
+        private Excel.Application netofficeApplication;
+
+        public Excel.Application App => (netofficeApplication = netofficeApplication ?? new Excel.Application(null, Globals.BBAddIn.Application));
+
         public BumbleBeeRibbon theRibbon;
 
         public BBColorSmells bbColorSmells { get; private set; }
