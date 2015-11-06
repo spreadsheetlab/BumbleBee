@@ -161,22 +161,136 @@ namespace Infotron.FSharpFormulaTransformation
         /// <summary>
         /// Print transformation rule grammar
         /// </summary>
-        public static string Print(this ParseTreeNode node)
+        public static string Print(this ParseTreeNode input)
         {
-            if (node.Term is Terminal)
+            // For terminals, just print the token text
+            if (input.Term is Terminal)
             {
-                return ExcelFormulaParser.Print(node);
+                return input.Token.Text;
             }
 
-            switch (node.Type())
+            // (Lazy) enumerable for printed childs
+            var childs = input.ChildNodes.Select(Print);
+            // Concrete list when needed
+            List<string> childsL;
+
+            string ret;
+            // Switch on nonterminals
+            switch (input.Term.Name)
             {
                 case TransformationRuleGrammar.Names.VarExpression:
                 case TransformationRuleGrammar.Names.DynamicCell:
                 case TransformationRuleGrammar.Names.DynamicConstant:
                 case TransformationRuleGrammar.Names.DynamicRange:
-                    return string.Join("", node.ChildNodes);
+                    return string.Join("", input.ChildNodes);
+
+                case GrammarNames.Formula:
+                    // Check if these are brackets, otherwise print first child
+                    return input.IsParentheses() ? $"({childs.First()})" : childs.First();
+
+                case GrammarNames.FunctionCall:
+                case GrammarNames.ReferenceFunctionCall:
+                case GrammarNames.UDFunctionCall:
+                    childsL = childs.ToList();
+
+                    if (input.IsNamedFunction())
+                    {
+                        return string.Join("", childsL) + ")";
+                    }
+
+                    if (input.IsBinaryOperation())
+                    {
+                        // format string for "normal" binary operation
+                        string format = "{0} {1} {2}";
+                        if (input.IsIntersection())
+                        {
+                            format = "{0} {2}";
+                        }
+                        else if (input.IsBinaryReferenceOperation())
+                        {
+                            format = "{0}{1}{2}";
+                        }
+
+                        return string.Format(format, childsL[0], childsL[1], childsL[2]);
+                    }
+
+                    if (input.IsUnion())
+                    {
+                        return $"({string.Join(",", childsL)})";
+                    }
+
+                    if (input.IsUnaryOperation())
+                    {
+                        return string.Join("", childsL);
+                    }
+
+                    throw new ArgumentException("Unknown function type.");
+
+                case GrammarNames.Reference:
+                    if (input.IsParentheses())
+                    {
+                        return $"({childs.First()})";
+                    }
+
+                    return string.Join("", childs);
+
+                case GrammarNames.Prefix:
+                    ret = string.Join("", childs);
+                    // The exclamation mark token is not included in the parse tree, so we have to add that if it's a single file
+                    if (input.ChildNodes.Count == 1 && input.ChildNodes[0].Is(GrammarNames.File))
+                    {
+                        ret += "!";
+                    }
+                    return ret;
+
+                case GrammarNames.ArrayFormula:
+                    return "{=" + childs.ElementAt(1) + "}";
+
+                case GrammarNames.StructureReference:
+                    ret = "";
+                    var hastable = input.ChildNodes.Count == 2;
+                    var contentsNode = hastable ? 1 : 0;
+                    childsL = childs.ToList();
+                    if (hastable) ret += childsL[0];
+
+                    if (input.ChildNodes[contentsNode].Is(GrammarNames.StructureReferenceColumnOrKeyword))
+                    {
+                        ret += childsL[contentsNode];
+                    }
+                    else
+                    {
+                        ret += $"[{childsL[contentsNode]}]";
+                    }
+
+                    return ret;
+
+                // Terms for which to print all child nodes concatenated
+                case GrammarNames.ArrayConstant:
+                case GrammarNames.DynamicDataExchange:
+                case GrammarNames.FormulaWithEq:
+                case GrammarNames.File:
+                case GrammarNames.StructureReferenceExpression:
+                    return string.Join("", childs);
+
+                // Terms for which we print the childs comma-separated
+                case GrammarNames.Arguments:
+                case GrammarNames.ArrayRows:
+                case GrammarNames.Union:
+                    return string.Join(",", childs);
+
+                case GrammarNames.ArrayColumns:
+                    return string.Join(";", childs);
+
+                case GrammarNames.ConstantArray:
+                    return $"{{{childs.First()}}}";
+
                 default:
-                    return ExcelFormulaParser.Print(node, Print);
+                    // If it is not defined above and the number of childs is exactly one, we want to just print the first child
+                    if (input.ChildNodes.Count == 1)
+                    {
+                        return childs.First();
+                    }
+                    throw new ArgumentException($"Could not print node of type '{input.Term.Name}'.\nThis probably means the excel grammar was modified without the print function being modified");
             }
         }
 
