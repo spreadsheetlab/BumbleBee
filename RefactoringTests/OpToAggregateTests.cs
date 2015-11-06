@@ -1,8 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ExcelAddIn3.Refactorings;
-using ExcelAddIn3.Refactorings.Util;
-using Infotron.Parsing;
+using BumbleBee.Refactorings;
+using BumbleBee.Refactorings.Util;
+using XLParser;
 
 namespace RefactoringTests
 {

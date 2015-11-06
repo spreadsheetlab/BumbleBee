@@ -14,14 +14,13 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
 using Infotron.Util;
-using Infotron.Parsing;
 using Microsoft.Office.Interop.Excel;
 using System.IO;
 using System.Runtime.InteropServices;
-using ExcelAddIn3.Refactorings;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings;
+using BumbleBee.Refactorings.Util;
 
-namespace ExcelAddIn3.TaskPanes
+namespace BumbleBee.TaskPanes
 {
     /// <summary>
     /// Interaction logic for ExtractFormulaTaskPane.xaml
@@ -182,7 +181,7 @@ namespace ExcelAddIn3.TaskPanes
                     NewCellAddress = new Location(value) {RowFixed = true, ColumnFixed = true};
                     fixedAddressValid = true;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     fixedAddressValid = false;
                     throw;
@@ -196,7 +195,8 @@ namespace ExcelAddIn3.TaskPanes
 
 
         public ContextNode RefactoredFormula { get; private set; }
-        public string RefactoredFormulaStr { get { return RefactoredFormula != null ? RefactoredFormula.Print() : ""; }}
+        public string RefactoredFormulaStr => RefactoredFormula != null ? RefactoredFormula.Print() : "";
+
         private void setRefactoredFormula()
         {
             if (orFormula == null || Formula == null || NewCellAddress == null) return;
@@ -220,19 +220,19 @@ namespace ExcelAddIn3.TaskPanes
                         var f = orFormula.Ctx.Parse(value);
                         if (!orFormula.Contains(f))
                         {
-                            throw new ArgumentException("Original formula does not contain subformula.", "value");
+                            throw new ArgumentException("Original formula does not contain subformula.", nameof(value));
                         }
                         Formula = f;
                     }
                     catch (InvalidDataException e)
                     {
-                        throw new ArgumentException("Not a valid formula", "value", e);
+                        throw new ArgumentException("Not a valid formula", nameof(value), e);
                     }
                     formulaValid = true;
                     OnPropertyChanged("Formula");
                     OnPropertyChanged("FormulaStr");
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     formulaValid = false;
                     throw;
@@ -316,7 +316,7 @@ namespace ExcelAddIn3.TaskPanes
                 {
                     ExtractFormula.Refactor(OrRange, Direction, Formula);
                 }
-                Globals.BBAddIn.extractFormulaCtp.Visible = false;
+                Globals.BBAddIn.bbMenuRefactorings.extractFormulaCtp.Visible = false;
             }
             catch (ArgumentException ex)
             {

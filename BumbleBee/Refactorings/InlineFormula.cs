@@ -2,14 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings.Util;
 using Microsoft.Office.Interop.Excel;
-using Infotron.Parsing;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
+using XLParser;
 
-namespace ExcelAddIn3.Refactorings
+namespace BumbleBee.Refactorings
 {
     public class InlineFormula : RangeRefactoring
     {
+        #if DEBUG
+            private static readonly bool DEBUG = true;
+        #else
+            private static readonly bool DEBUG = false;
+        #endif
 
         /// <summary>
         /// Inline all cells in a range into their dependents
@@ -30,7 +37,8 @@ namespace ExcelAddIn3.Refactorings
                             RefactorSingle(cell, ctx);
                         }
                     }
-                    catch (Exception e)
+                    
+                    catch (Exception e) when(!DEBUG)
                     {
                         errors.Add(e);
                     }
@@ -42,20 +50,21 @@ namespace ExcelAddIn3.Refactorings
             }
         }
 
-        protected override RangeShape.Flags AppliesTo
-        {
-            get { return RangeShape.Flags.NonEmpty; }
-        }
+        protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
 
         private static void RefactorSingle(Range toInline, Context toInlineCtx)
         {
+            // If no AST to inline is provided, inline the toInline AST
+            var toInlineAST = Helper.ParseCtx(toInline, toInlineCtx);
+
+            // Gather dependencies
             var dependencies = GetAllDirectDependents(toInline);
             if (dependencies.Count == 0)
             {
-                throw new InvalidOperationException(String.Format("Cell {0} has no dependencies", toInline.SheetAndAddress()));
+                throw new InvalidOperationException($"Cell {toInline.SheetAndAddress()} has no dependencies");
             }
 
-            var toInlineAST = Helper.ParseCtx(toInline, toInlineCtx);
+            
             //MessageBox.Show(toInlineFormula);
             var toInlineAddress = Helper.ParseCtx(toInline.Address[false, false], toInlineCtx);
 
@@ -68,41 +77,52 @@ namespace ExcelAddIn3.Refactorings
                     var dependentAST = Helper.ParseCtx(dependent);
                     if (dependentAST.Node == null)
                     {
-                        throw new InvalidOperationException(String.Format("Could not parse formula of {0}",
-                            dependent.SheetAndAddress()));
+                        throw new InvalidOperationException($"Could not parse formula of {dependent.SheetAndAddress()}");
                     }
                     // Check if the dependent has the cell in a range
                     //var ranges = RefactoringHelper.ContainsCellInRanges(toInlineAddress, dependentAST);
-                    var ranges = toInlineAddress.CellContainedInRanges(dependentAST).ToList();
+                    var ranges = toInlineAddress.CellContainedInRanges(dependentAST);
                     if (ranges.Any())
                     {
-                        // TODO: Handle cell in range gracefully, e.g. by altering the range
-                        throw new InvalidOperationException(
-                            String.Format("{1} refers to cell in range '{0}'",
-                                ranges.First().Print(), dependent.SheetAndAddress()));
+                        var minimal = toInlineAST.Ctx.QualifyMinimal(ranges.First());
+                        throw new InvalidOperationException($"{dependent.SheetAndAddress()} refers to cell in range '{minimal.Print()}'");
                     }
                     // Check if the dependent has the cell in a named range
 
                     string range;
-                    var nrs = dependentAST.NamedRanges
-                        .Select(nr => toInline.Application.Names.Find(nr))
+                    var nrs = dependentAST.NamedRanges;
+                    var excelnames = nrs
+                        .Select(nr =>
+                        {
+                            var app = toInline.Application;
+                            var names = app.Names;
+                            var name = names.Find(nr);
+                            names.ReleaseCom();
+                            app.ReleaseCom();
+                            return name;
+                        })
                         .Where(nr => nr != null);
-                    if (IsInNamedRanges(toInline, nrs, out range))
+                    if (IsInNamedRanges(toInline, excelnames, out range))
                     {
-                        throw new InvalidOperationException(
-                            String.Format("{1} refers to cell in named range '{0}'.", range,
-                                dependent.SheetAndAddress()));
+                        throw new InvalidOperationException( $"{dependent.SheetAndAddress()} refers to cell in named range '{range}'.");
                     }
 
                     // As a failsafe, check that the dependent cell at least refers to the to-inline cell.
                     // In case the above error conditions fail
                     if (!dependentAST.Contains(toInlineAddress))
                     {
-                        throw new InvalidOperationException(String.Format("{1} refers to cell {0}, but it is unknown how.",dependent.SheetAndAddress(), toInline.Address[false,false]));
+                        throw new InvalidOperationException($"{dependent.SheetAndAddress()} refers to cell {toInline.Address[false, false]}, but it is unknown how.");
                     }
 
                     var newFormula = dependentAST.Replace(toInlineAddress, toInlineAST);
-                    dependent.Formula = "=" + newFormula.Print();
+                    try
+                    {
+                        dependent.Formula = "=" + newFormula.Print();
+                    }
+                    catch (COMException e)
+                    {
+                        throw new InvalidOperationException($"Refactoring produced invalid formula '={newFormula.Print()}' from original formula '{dependentAST.Print()}' for cell {dependent.SheetAndAddress()}", e);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -124,7 +144,7 @@ namespace ExcelAddIn3.Refactorings
         }
 
         /// <summary>
-        /// Get all direct dependents of the given cell.
+        /// Get all direct dependents of the given cell, or first cell of the given range
         /// </summary>
         /// <remarks>
         /// Contrary to Range.DirectDependents this also gives those in different sheets or workbooks.
@@ -135,21 +155,17 @@ namespace ExcelAddIn3.Refactorings
         /// Based on https://colinlegg.wordpress.com/2014/01/14/vba-determine-all-precedent-cells-a-nice-example-of-recursion/.
         /// </remarks>
         /// <returns>All dependent cells as a collection of ranges</returns>
-        private static ICollection<Range> GetAllDirectDependents(Range cell)
+        internal static ICollection<Range> GetAllDirectDependents(Range cell)
         {
-            if (cell.Count > 1)
-            {
-                throw new ArgumentException("Range has more than one cell.");
-            }
-
-            String cellAddress = cell.Address[false, false, XlReferenceStyle.xlA1, true];
+            var firstCell = cell;//cell.Cells[1, 1];
+            var cellAddress = firstCell.Address[false, false, XlReferenceStyle.xlA1, true];
 
             // Disable updating the screen so the user doesn't see our trace arrows
             cell.Application.ScreenUpdating = false;
 
             var dependents = new List<Range>();
 
-            cell.ShowDependents();
+            firstCell.ShowDependents();
             // Unfortunately we don't know beforehand how many arrows and links there are, so we'll have to loop till we encounter a non-existing one
             bool checkNextArrowNumber = true;
             for(int arrow = 1; checkNextArrowNumber; arrow++)
@@ -161,7 +177,7 @@ namespace ExcelAddIn3.Refactorings
                     checkNextLink = false;
                     try
                     {
-                        Range dependent = cell.NavigateArrow(false, arrow, link);
+                        Range dependent = firstCell.NavigateArrow(false, arrow, link);
                         // This still is a valid arrow, so check the next one
                         if (cellAddress != dependent.Address[false, false, XlReferenceStyle.xlA1, true])
                         {
@@ -169,28 +185,24 @@ namespace ExcelAddIn3.Refactorings
                             checkNextLink = true;
                             dependents.Add(dependent);
                         }
+                        //Marshal.ReleaseComObject(dependent);
                         // If you want to extend this to transitive dependencies, don't forget to do some circular reference detection
                     }
-                    catch (COMException e)
+                    catch (COMException e) when (e.Message == "NavigateArrow method of Range class failed")
                     {
-                        if (e.ErrorCode == -2146827284 || e.Message == "NavigateArrow method of Range class failed") {
-                            checkNextLink = false;
-                        }
-                        else
-                        {
-                            throw;
-                        }
-                        
+                        // Found the first invalid arrow
+                        checkNextLink = false;
                     }
                 }
             }
 
-            cell.ShowDependents(false);
+            firstCell.ShowDependents(false);
             cell.Worksheet.ClearArrows();
             
             // Resume updating the screen
             cell.Application.ScreenUpdating = true;
 
+            //Marshal.ReleaseComObject(firstCell);
             return dependents;
         }
 

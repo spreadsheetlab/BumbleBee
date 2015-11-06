@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ExcelAddIn3.Refactorings.Util;
+using BumbleBee.Refactorings.Util;
 using Microsoft.Office.Interop.Excel;
 
-namespace ExcelAddIn3.Refactorings
+namespace BumbleBee.Refactorings
 {
     class ExtractFormulaMenuStub : RangeRefactoring
     {
         public override void Refactor(Range applyto)
         {
-            Globals.BBAddIn.extractFormulaTp.Child.init(applyto);
-            Globals.BBAddIn.extractFormulaCtp.Visible = true;
+            Globals.BBAddIn.bbMenuRefactorings.extractFormulaTp.Child.init(applyto);
+            Globals.BBAddIn.bbMenuRefactorings.extractFormulaCtp.Visible = true;
         }
 
         public override bool CanRefactor(Range applyto)
@@ -25,9 +25,6 @@ namespace ExcelAddIn3.Refactorings
             return applyto.Cells.Cast<Range>().All(cell => cell.FormulaR1C1 == r1c1);
         }
 
-        protected override RangeShape.Flags AppliesTo
-        {
-            get { return RangeShape.Flags.NonEmpty; }
-        }
+        protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace ExcelAddIn3.TaskPanes
+﻿namespace BumbleBee.TaskPanes
 {
     partial class TaksPaneWPFContainer<T>
     {

@@ -5,16 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Irony.Parsing;
-using Infotron.Parsing;
 using FSharpEngine;
 using Microsoft.FSharp.Collections;
 using Infotron.Util;
+using XLParser;
 
 namespace Infotron.FSharpFormulaTransformation
 {
     public static class FSharpFormulaHelper
     {
-        private static readonly Parser parser = new Irony.Parsing.Parser(new TransformationRuleGrammar());
+        private static readonly Parser parser = new Parser(new TransformationRuleGrammar());
 
         /// <summary>
         /// Parse a BumbleBee or Excel formula to a parse tree
@@ -43,135 +43,95 @@ namespace Infotron.FSharpFormulaTransformation
         /// </summary>
         public static FSharpTransform.Formula CreateFSharpTree(this ParseTreeNode input)
         {
-            var termName = input.Term.Name;
-
-            // Switch isn't possible due to GrammarNames.* not being constants (yet)
-            if (termName == GrammarNames.Reference)
+            if (input.IsParentheses())
             {
-                // Skip prefix
-                return CreateFSharpTree(input.ChildNodes[input.ChildNodes.Count==1?0:1]);
+                return FSharpTransform.Formula.NewFunction("", ListModule.OfSeq(new [] { CreateFSharpTree(input.ChildNodes[0]) }));
             }
-            else if (termName == GrammarNames.Formula ||
-                termName == GrammarNames.CellorRange ||
-                termName == GrammarNames.Argument)
+
+            input = input.SkipToRelevant();
+
+            switch (input.Type())
             {
-                return CreateFSharpTree(input.ChildNodes.First());
-            }
-            else if (termName == GrammarNames.FunctionCall)
-            {
-                string FunctionName = "";
-                List<FSharpTransform.Formula> arguments = new List<FSharpTransform.Formula>();
-
-                foreach (var Argument in input.ChildNodes)
-                {
-                    if (ExcelFormulaParser.IsFunction(Argument) || (Argument.Term.Name == GrammarNames.Function))
+                case GrammarNames.FunctionCall:
+                case GrammarNames.ReferenceFunctionCall:
+                case GrammarNames.UDFunctionCall:
+                    var fname = input.GetFunction() + (input.IsNamedFunction()?"(":"");
+                    var args = ListModule.OfSeq(input.GetFunctionArguments().Select(CreateFSharpTree));
+                    // Check for range
+                    if (fname == ":")
                     {
-                        FunctionName += ExcelFormulaParser.GetFunction(Argument);
+                        return makeFSharpRange(input);
                     }
-                    else
-                    {
-                        foreach (var item in Argument.ChildNodes)
-                        {
-                            arguments.Add(CreateFSharpTree(item));
-                        }
-                        //compare shoiuld end in fix
-
-                    }
-                }
-
-                FSharpList<FSharpTransform.Formula> Farguments = ListModule.OfSeq(arguments);
-                return FSharpTransform.makeFormula(FunctionName, Farguments);
-            }
-            else if (termName == GrammarNames.NamedRange)
-            {
-                return FSharpTransform.makeNamedRange(input.ChildNodes.First().Token.Text);
-            }
-            else if (termName == GrammarNames.Range)
-            {
-                if (input.ChildNodes.First().Term.ToString() == GrammarNames.DynamicRange)
-                {
-                    //get variables from dynamic cell
-                    ParseTreeNode DynamicRange = input.ChildNodes.First();
-
-                    ParseTreeNode VarExpression1 = DynamicRange.ChildNodes.ElementAt(0);
-                    char Var1 = VarExpression1.Token.ValueString[0];
-
-                    return FSharpTransform.makeDRange(Var1);
-                }
-                else
-                {
-                    ParseTreeNode Cell1 = input.ChildNodes.ElementAt(0);
-                    ParseTreeNode Cell2 = input.ChildNodes.ElementAt(2);
-
-                    FSharpTransform.SuperCell C1;
-                    FSharpTransform.SuperCell C2;
-
-                    if (Cell1.ChildNodes.First().Term.ToString() == GrammarNames.Cell)
-                    {
-                        string cell1Location = Cell1.ChildNodes.First().Token.ValueString;
-                        Location L1 = new Location(cell1Location);
-                        C1 = FSharpTransform.makeCell(L1.Column, L1.Row);
-                    }
-                    else
-                    {
-                        C1 = GetDynamicCell(Cell1);
-                    }
-
-                    if (Cell1.ChildNodes.First().Term.ToString() == GrammarNames.Cell)
-                    {
-                        string cell2Location = Cell2.ChildNodes.First().Token.ValueString;
-                        Location L2 = new Location(cell2Location);
-                        C2 = FSharpTransform.makeCell(L2.Column, L2.Row);
-                    }
-                    else
-                    {
-                        C2 = GetDynamicCell(Cell2);
-                    }
-
-                    return FSharpTransform.makeRange(C1, C2);
-                }
-            }
-            else if (termName == GrammarNames.Cell)
-            {
-                if (input.ChildNodes.First().Term.ToString() == GrammarNames.DynamicCell)
-                {
-                    //get variables from dynamic cell
-                    FSharpTransform.SuperCell x = GetDynamicCell(input);
-                    return FSharpTransform.makeSuperCell(x);
-                }
-                else
-                {
-                    string cellLocation = input.ChildNodes.First().Token.ValueString;
-                    Location L = new Location(cellLocation);
+                    return FSharpTransform.makeFormula(fname, args);
+                case GrammarNames.Reference:
+                    // ignore prefix
+                    return CreateFSharpTree(input.ChildNodes.Count == 1 ? input.ChildNodes[0] : input.ChildNodes[1]);
+                case GrammarNames.Cell:
+                    var L = new Location(input.Print());
                     return FSharpTransform.makeSuperCell(FSharpTransform.makeCell(L.Column, L.Row));
-                }
+                case GrammarNames.NamedRange:
+                    return FSharpTransform.makeNamedRange(input.Print());
+                case TransformationRuleGrammar.Names.DynamicCell:
+                    //get variables from dynamic cell
+                    return FSharpTransform.makeSuperCell(GetDynamicCell(input));
+                case TransformationRuleGrammar.Names.DynamicRange:
+                    var letter = input // DynamicRange
+                        .ChildNodes[0] // LowLetter
+                        .Token.ValueString[0];
+                    return FSharpTransform.makeDRange(letter);
+                case GrammarNames.Constant:
+                case GrammarNames.Number:
+                case GrammarNames.Text:
+                case GrammarNames.Bool:
+                case GrammarNames.Error:
+                case GrammarNames.RefError:
+                    return FSharpTransform.makeConstant(input.Print());
+                case TransformationRuleGrammar.Names.DynamicConstant:
+                    return FSharpTransform.makeDArgument(input.ChildNodes[0].Token.ValueString[1]);
+                default:
+                    throw new ArgumentException($"Can't convert node type {input.Type()}", nameof(input));
             }
-            else if (termName == GrammarNames.Number)
+        }
+
+        private static FSharpTransform.Formula makeFSharpRange(ParseTreeNode input)
+        {
+            ParseTreeNode Cell1 = input.ChildNodes[0];
+            ParseTreeNode Cell2 = input.ChildNodes[2];
+
+            FSharpTransform.SuperCell C1;
+            FSharpTransform.SuperCell C2;
+
+            if (Cell1.ChildNodes[0].Type() == GrammarNames.Cell)
             {
-                string C = input.Token.ValueString;
-                return FSharpTransform.makeConstant(C);
+                string cell1Location = Cell1.ChildNodes[0].Print();
+                Location L1 = new Location(cell1Location);
+                C1 = FSharpTransform.makeCell(L1.Column, L1.Row);
             }
-            else if (termName == GrammarNames.Text)
+            else
             {
-                string C3 = input.ChildNodes.First().Token.ValueString;
-                return FSharpTransform.makeConstant("\"" + C3 + "\"");
-            }
-            else if (termName == GrammarNames.DynamicConstant)
-            {
-                //get variables from dynamic constanc
-                char y = input.ChildNodes.First().Token.ValueString[0];
-                return FSharpTransform.makeDArgument(y);
+                C1 = GetDynamicCell(Cell1);
             }
 
-            throw new ArgumentException("Can't convert this node type", "input");
+            if (Cell1.ChildNodes[0].Type() == GrammarNames.Cell)
+            {
+                string cell2Location = Cell2.ChildNodes[0].Print();
+                Location L2 = new Location(cell2Location);
+                C2 = FSharpTransform.makeCell(L2.Column, L2.Row);
+            }
+            else
+            {
+                C2 = GetDynamicCell(Cell2);
+            }
+
+            return FSharpTransform.makeRange(C1, C2);
         }
 
         private static FSharpTransform.SuperCell GetDynamicCell(ParseTreeNode input)
         {
-            ParseTreeNode DynamicCell = input.ChildNodes.First();
+            ParseTreeNode DynamicCell = input.SkipToRelevant();
 
-            ParseTreeNode VarExpression1 = DynamicCell.ChildNodes.ElementAt(0);
-            ParseTreeNode VarExpression2 = DynamicCell.ChildNodes.ElementAt(1);
+            ParseTreeNode VarExpression1 = DynamicCell.ChildNodes[0];
+            ParseTreeNode VarExpression2 = DynamicCell.ChildNodes[2];
 
             char Var1;
             char Var2;
@@ -179,23 +139,159 @@ namespace Infotron.FSharpFormulaTransformation
             char Var4;
 
             if (VarExpression1.ChildNodes.Count == 1) {
-                Var1 = VarExpression1.ChildNodes.First().Token.ValueString[0];
+                Var1 = Print(VarExpression1.ChildNodes[0])[0];
                 Var2 = '0';
             } else {
-                Var1 = VarExpression1.ChildNodes.First().ChildNodes.First().Token.ValueString[0];
-                Var2 = VarExpression1.ChildNodes.ElementAt(2).ChildNodes.First().Token.ValueString[0];
+                Var1 = Print(VarExpression1.ChildNodes[0])[0];
+                Var2 = Print(VarExpression1.ChildNodes[2])[0];
             }
 
             if (VarExpression2.ChildNodes.Count == 1) {
-                Var3 = VarExpression2.ChildNodes.First().Token.ValueString[0];
+                Var3 = Print(VarExpression2.ChildNodes[0])[0];
                 Var4 = '0';
             } else {
-                Var3 = VarExpression2.ChildNodes.First().ChildNodes.First().Token.ValueString[0];
-                Var4 = VarExpression2.ChildNodes.ElementAt(2).ChildNodes.First().Token.ValueString[0];
+                Var3 = Print(VarExpression2.ChildNodes[0])[0];
+                Var4 = Print(VarExpression2.ChildNodes[2])[0];
             }
 
             FSharpTransform.SuperCell x = FSharpTransform.makeDCell(Var1, Var2, Var3, Var4);
             return x;
+        }
+
+        /// <summary>
+        /// Print transformation rule grammar
+        /// </summary>
+        public static string Print(this ParseTreeNode input)
+        {
+            // For terminals, just print the token text
+            if (input.Term is Terminal)
+            {
+                return input.Token.Text;
+            }
+
+            // (Lazy) enumerable for printed childs
+            var childs = input.ChildNodes.Select(Print);
+            // Concrete list when needed
+            List<string> childsL;
+
+            string ret;
+            // Switch on nonterminals
+            switch (input.Term.Name)
+            {
+                case TransformationRuleGrammar.Names.VarExpression:
+                case TransformationRuleGrammar.Names.DynamicCell:
+                case TransformationRuleGrammar.Names.DynamicConstant:
+                case TransformationRuleGrammar.Names.DynamicRange:
+                    return string.Join("", input.ChildNodes);
+
+                case GrammarNames.Formula:
+                    // Check if these are brackets, otherwise print first child
+                    return input.IsParentheses() ? $"({childs.First()})" : childs.First();
+
+                case GrammarNames.FunctionCall:
+                case GrammarNames.ReferenceFunctionCall:
+                case GrammarNames.UDFunctionCall:
+                    childsL = childs.ToList();
+
+                    if (input.IsNamedFunction())
+                    {
+                        return string.Join("", childsL) + ")";
+                    }
+
+                    if (input.IsBinaryOperation())
+                    {
+                        // format string for "normal" binary operation
+                        string format = "{0} {1} {2}";
+                        if (input.IsIntersection())
+                        {
+                            format = "{0} {2}";
+                        }
+                        else if (input.IsBinaryReferenceOperation())
+                        {
+                            format = "{0}{1}{2}";
+                        }
+
+                        return string.Format(format, childsL[0], childsL[1], childsL[2]);
+                    }
+
+                    if (input.IsUnion())
+                    {
+                        return $"({string.Join(",", childsL)})";
+                    }
+
+                    if (input.IsUnaryOperation())
+                    {
+                        return string.Join("", childsL);
+                    }
+
+                    throw new ArgumentException("Unknown function type.");
+
+                case GrammarNames.Reference:
+                    if (input.IsParentheses())
+                    {
+                        return $"({childs.First()})";
+                    }
+
+                    return string.Join("", childs);
+
+                case GrammarNames.Prefix:
+                    ret = string.Join("", childs);
+                    // The exclamation mark token is not included in the parse tree, so we have to add that if it's a single file
+                    if (input.ChildNodes.Count == 1 && input.ChildNodes[0].Is(GrammarNames.File))
+                    {
+                        ret += "!";
+                    }
+                    return ret;
+
+                case GrammarNames.ArrayFormula:
+                    return "{=" + childs.ElementAt(1) + "}";
+
+                case GrammarNames.StructureReference:
+                    ret = "";
+                    var hastable = input.ChildNodes.Count == 2;
+                    var contentsNode = hastable ? 1 : 0;
+                    childsL = childs.ToList();
+                    if (hastable) ret += childsL[0];
+
+                    if (input.ChildNodes[contentsNode].Is(GrammarNames.StructureReferenceColumnOrKeyword))
+                    {
+                        ret += childsL[contentsNode];
+                    }
+                    else
+                    {
+                        ret += $"[{childsL[contentsNode]}]";
+                    }
+
+                    return ret;
+
+                // Terms for which to print all child nodes concatenated
+                case GrammarNames.ArrayConstant:
+                case GrammarNames.DynamicDataExchange:
+                case GrammarNames.FormulaWithEq:
+                case GrammarNames.File:
+                case GrammarNames.StructureReferenceExpression:
+                    return string.Join("", childs);
+
+                // Terms for which we print the childs comma-separated
+                case GrammarNames.Arguments:
+                case GrammarNames.ArrayRows:
+                case GrammarNames.Union:
+                    return string.Join(",", childs);
+
+                case GrammarNames.ArrayColumns:
+                    return string.Join(";", childs);
+
+                case GrammarNames.ConstantArray:
+                    return $"{{{childs.First()}}}";
+
+                default:
+                    // If it is not defined above and the number of childs is exactly one, we want to just print the first child
+                    if (input.ChildNodes.Count == 1)
+                    {
+                        return childs.First();
+                    }
+                    throw new ArgumentException($"Could not print node of type '{input.Term.Name}'.\nThis probably means the excel grammar was modified without the print function being modified");
+            }
         }
 
         /// <summary>

@@ -4,13 +4,15 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using ExcelAddIn3.Refactorings.Util;
-using Infotron.Parsing;
+using BumbleBee.Refactorings.Util;
+using XLParser;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
 
 
-namespace ExcelAddIn3.Refactorings
+namespace BumbleBee.Refactorings
 {
     public interface IRangeRefactoring
     {
@@ -78,7 +80,7 @@ namespace ExcelAddIn3.Refactorings
                     }
                     catch (COMException e)
                     {
-                        throw new InvalidOperationException(String.Format("Refactoring produced invalid formula '{0}'", refactored.Print()), e);
+                        throw new InvalidOperationException($"Refactoring produced invalid formula '{refactored.Print()}'", e);
                     }
                 }
             }
@@ -86,10 +88,11 @@ namespace ExcelAddIn3.Refactorings
 
         public override bool CanRefactor(Range applyto)
         {
-            return applyto.FitsShape(AppliesTo) && applyto.Cells.Cast<Range>().Any(cell => CanRefactor(Helper.Parse(cell)));
+            return applyto.FitsShape(AppliesTo)
+                && applyto.UniqueFormulas(MAX_CELLS).Any(CanRefactor);
         }
 
-        protected override RangeShape.Flags AppliesTo { get { return RangeShape.Flags.NonEmpty; } }
+        protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
 
         public abstract ParseTreeNode Refactor(ParseTreeNode applyto);
         public abstract bool CanRefactor(ParseTreeNode applyto);

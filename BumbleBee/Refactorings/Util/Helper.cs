@@ -3,12 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Caching;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using Infotron.Parsing;
+using XLParser;
 using Irony.Parsing;
 using Microsoft.Office.Interop.Excel;
+using stdole;
+using Excel = NetOffice.ExcelApi;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
 
-namespace ExcelAddIn3.Refactorings.Util
+namespace BumbleBee.Refactorings.Util
 {
     public static class Helper
     {
@@ -22,7 +26,7 @@ namespace ExcelAddIn3.Refactorings.Util
             return r.Count == 0;
         }
 
-        private static bool UseParseCache { get { return true; }}
+        private static bool UseParseCache => true;
 
         // TODO: Replace with R1C1 cache and move references depending on memory usage and speed
         private static readonly ObjectCache formulaCache = UseParseCache ? new MemoryCache("FormulaCache") : null;
@@ -34,7 +38,7 @@ namespace ExcelAddIn3.Refactorings.Util
                 return (ParseTreeNode) formulaCache.Get(formula);
             }
 
-            var parsed = ExcelFormulaParser.Instance.ParseToTree(formula).Root;
+            var parsed = ExcelFormulaParser.Parse(formula);
             if (UseParseCache)
             {
                 formulaCache.Add(formula, parsed, new CacheItemPolicy());
@@ -61,13 +65,13 @@ namespace ExcelAddIn3.Refactorings.Util
 
         public static ParseTreeNode Parse(Range cell)
         {
-            if (cell.Count != 1) throw new ArgumentException("Must be a single cell", "cell");
+            if (cell.Count != 1) throw new ArgumentException("Must be a single cell", nameof(cell));
             string f = cell.Formula;
             string toParse =
                 cell.HasFormula ? f.Substring(1)
                 : isNumeric(f) ? f
                 // Parse as text, replace single " with double "" to avoid breaking the escape sequence
-                : String.Format("\"{0}\"", f.Replace("\"", "\"\""));
+                : $"\"{f.Replace("\"", "\"\"")}\"";
             return Parse(toParse);
         }
 
@@ -98,25 +102,86 @@ namespace ExcelAddIn3.Refactorings.Util
             return cellAddressRegex.IsMatch(targetAddress);
         }
 
-        // BUG: Workbooks aren't considered yet because the parser can't parse workbook names yet
-        public static Name Find(this Names names, NamedRangeDef nr, bool ignoreWorkbook = true)
+        public static Name Find(this Names names, NamedRangeDef nr)
         {
             return names.Cast<Name>()
                 .FirstOrDefault(name =>
-                    nr.Name == name.Name
-                 && nr.Worksheet == (name.Parent is Workbook ? "" : name.Parent.Name)
-                 && (ignoreWorkbook || nr.Workbook == (name.Parent is Workbook ? name.Parent : name.Parent.Parent).Name)
-                 );
+                {
+                    Worksheet ws = null;
+                    Workbook wb = null;
+                    try
+                    {
+                        wb = name.Parent as Workbook;
+                        if (wb != null)
+                        {
+                            return nr.Name == name.Name && nr.Workbook == wb.Name;
+                        }
+                        else
+                        {
+                            ws = name.Parent;
+                            wb = ws.Parent;
+                            return nr.Name == name.Name
+                            && nr.Worksheet == ws.Name
+                            && (nr.Workbook == wb.Name || nr.Workbook == "");
+                        }
+                    }
+                    finally
+                    {
+                        ws.ReleaseCom();
+                        wb.ReleaseCom();
+                    }
+                }
+                );
         }
 
         public static string SheetAndAddress(this Range r)
         {
-            return String.Format("{0}!{1}", r.Worksheet.Name, r.Address[false,false]);
+            var w = r.Worksheet;
+            var name = w.Name;
+            w.ReleaseCom();
+            return $"{name}!{r.Address[false, false]}";
         }
 
         public static IEnumerable<Range> CellsToInspect(this Range r)
         {
             return r.Cells.Cast<Range>().Take(RangeRefactoring.MAX_CELLS);
+        }
+
+        /// <summary>
+        /// Gives all unique formulas in this range (according to the R1C1 formula)
+        /// </summary>
+        /// <param name="cellsToExamine">Maximum number of cells to examine</param>
+        public static IEnumerable<ParseTreeNode> UniqueFormulas(this Range r, int cellsToExamine = int.MaxValue)
+        {
+            var cells = r.Cells;
+            var encountered = new HashSet<string>();
+            var formulas = new List<ParseTreeNode>();
+            var count = 0;
+            foreach (ExcelRaw.Range cell in cells)
+            {
+                try
+                {
+                    if (count >= cellsToExamine) break;
+                    string r1c1 = cell.FormulaR1C1;
+                    if (!encountered.Contains(r1c1))
+                    {
+                        encountered.Add(r1c1);
+                        formulas.Add(Parse(cell));
+                    }
+                    count++;
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(cell);
+                }
+            }
+            Marshal.ReleaseComObject(cells);
+            return formulas;
+        }
+
+        public static void ReleaseCom(this object o)
+        {
+            if (o != null && Marshal.IsComObject(o)) Marshal.ReleaseComObject(o);
         }
     }
 }

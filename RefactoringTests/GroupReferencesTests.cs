@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using ExcelAddIn3.Refactorings;
-using ExcelAddIn3.Refactorings.Util;
-using Infotron.Parsing;
+using BumbleBee.Refactorings;
+using BumbleBee.Refactorings.Util;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Office.Interop.Excel;
+using ExcelRaw = Microsoft.Office.Interop.Excel;
+using XLParser;
 
 namespace RefactoringTests
 {

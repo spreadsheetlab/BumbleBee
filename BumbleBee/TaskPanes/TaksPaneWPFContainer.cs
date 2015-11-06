@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.Integration;
 using WPFC = System.Windows.Controls;
 
-namespace ExcelAddIn3.TaskPanes
+namespace BumbleBee.TaskPanes
 {
     public partial class TaksPaneWPFContainer<T> : UserControl where T : WPFC.UserControl
     {
