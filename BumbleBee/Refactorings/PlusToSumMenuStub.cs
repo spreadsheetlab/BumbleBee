@@ -11,17 +11,33 @@ namespace BumbleBee.Refactorings
     class PlusToSumMenuStub : RangeRefactoring
     {
         private static readonly OpToAggregate opToAggregate = new OpToAggregate();
+        private static readonly AgregrateToConditionalAggregrate aggrToCondAggr = new AgregrateToConditionalAggregrate();
+        private static readonly GroupReferences groupReferences = new GroupReferences();
 
         public override void Refactor(Range applyto)
         {
-            opToAggregate.Refactor(applyto);
+            bool didsomething = false;
+            if (opToAggregate.CanRefactor(applyto))
+            {
+                didsomething = true;
+                opToAggregate.Refactor(applyto);
+            }
+            if (aggrToCondAggr.CanRefactor(applyto))
+            {
+                didsomething = true;
+                aggrToCondAggr.Refactor(applyto);
+            }
+            if (didsomething)
+            {
+                groupReferences.Refactor(applyto);
+            }
         }
 
         public override bool CanRefactor(Range applyto)
         {
-            return opToAggregate.CanRefactor(applyto);
+            return opToAggregate.CanRefactor(applyto) || aggrToCondAggr.CanRefactor(applyto);
         }
 
-        protected override RangeShape.Flags AppliesTo => RangeShape.Flags.SingleColumn;
+        protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
     }
 }
