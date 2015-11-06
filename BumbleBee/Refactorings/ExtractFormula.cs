@@ -40,11 +40,11 @@ namespace BumbleBee.Refactorings
             public static readonly Direction Down = new Direction(DIR.Down, 0, -1);
 
             public DIR Dir { get; private set; }
-            public int x { get { return Item1; } }
-            public int y { get { return Item2; } }
+            public int x => Item1;
+            public int y => Item2;
 
-            public int ColOffset { get { return x; } }
-            public int RowOffset { get { return -y; } }
+            public int ColOffset => x;
+            public int RowOffset => -y;
 
             private Direction(DIR dir, int x, int y) : base(x, y)
             {
@@ -152,7 +152,7 @@ namespace BumbleBee.Refactorings
             Range target = applyto.Worksheet.Cells[to.Row1, to.Column1];
             if (target.Value2 != null && target.Value2 != "")
             {
-                throw new ArgumentException(String.Format("Target cell {0} is not empty", to));
+                throw new ArgumentException($"Target cell {to} is not empty");
             }
             target.Formula = "=" + subformula.Print();
             var targetAddr = subformula.Ctx.Parse(to.Address());
@@ -193,12 +193,9 @@ namespace BumbleBee.Refactorings
                 .GroupBy(c => (string) c.FormulaR1C1)
                 .Select(group => new {parse = Helper.ParseCtx(@group.First(), subformula.Ctx), example = @group.First()})
                 .FirstOrDefault(t => !t.parse.Contains(subformula));
-            return which != null ? which.example : null;
+            return which?.example;
         }
 
-        protected override RangeShape.Flags AppliesTo
-        {
-            get { return RangeShape.Flags.NonEmpty; }
-        }
+        protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
     }
 }

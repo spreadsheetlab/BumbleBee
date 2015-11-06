@@ -372,7 +372,7 @@ namespace BumbleBee.Refactorings.Util
             {
                 childs.Add(CustomParseTreeNode.NonTerminal(GrammarNames.File, GrammarNames.TokenEnclosedInBrackets, $"[{prefixinfo.FileName}]"));
                 childs.Add(CustomParseTreeNode.Terminal(GrammarNames.TokenSheet, prefixinfo.Sheet));
-            } else if (prefixinfo.HasSheet && prefixinfo.Sheet != DefinedIn.Worksheet)
+            } else if (prefixinfo.HasSheet && prefixinfo.Sheet != DefinedIn.WorksheetClean)
             {
                 childs.Add(CustomParseTreeNode.Terminal(GrammarNames.TokenSheet, DefinedIn.Worksheet));
             } 
