@@ -21,8 +21,9 @@ namespace BumbleBee.Refactorings
             if (!base.CanRefactor(applyto)) return false;
 
             // Make sure all cells have the same R1C1
-            var r1c1 = applyto.Cells.Cast<Range>().First().FormulaR1C1;
-            return applyto.Cells.Cast<Range>().All(cell => cell.FormulaR1C1 == r1c1);
+            //var r1c1 = applyto.Cells.Cast<Range>().First().FormulaR1C1;
+            //return applyto.Cells.Cast<Range>().All(cell => cell.FormulaR1C1 == r1c1);
+            return true;
         }
 
         protected override RangeShape.Flags AppliesTo => RangeShape.Flags.NonEmpty;
