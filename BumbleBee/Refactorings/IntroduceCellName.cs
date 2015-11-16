@@ -50,7 +50,7 @@ namespace BumbleBee.Refactorings
                 // Parse error
                 throw new ArgumentException($"Name {name} is not a valid name for a named range");
             }
-            parse = parse.SkipToRelevant();
+            parse = parse.SkipToRelevant(true);
             if (!parse.Is(GrammarNames.NamedRange))
             {
                 throw new ArgumentException($"Name {name} is not a valid name for a named range, because Excel interpets it as a {parse.Type()}");
